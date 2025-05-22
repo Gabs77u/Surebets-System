@@ -12,9 +12,13 @@ Todas as mudanças importantes deste projeto serão documentadas aqui.
 - Sistema de notificações em tempo real (WebSocket, Telegram, WhatsApp).
 - Adapters para múltiplas casas de apostas (Bet365, Pinnacle, Betfair, Super Odds) usando padrão Adapter.
 - Testes unitários para configurações, segurança e cache.
-- Internacionalização do README, badges, changelog separado, licença MIT.
+- Internacionalização do README, badges, changelog, licença MIT.
 - Scripts de build automatizado (build.sh, build.bat), build.spec para PyInstaller.
 - Ponto de entrada unificado (main.py) e script run_surebets.py para execução facilitada.
+- **Internacionalização dinâmica completa:**
+  - Frontend Dash multilíngue com seletor de idioma (🇧🇷/🇺🇸) e labels/mensagens dinâmicos.
+  - Backend Flask (admin_api.py) com respostas de erro e status em português ou inglês, conforme Accept-Language.
+  - Notificações e API administrativas 100% bilíngues.
 
 ### Corrigido
 - Removida duplicidade de layout no frontend Dash.

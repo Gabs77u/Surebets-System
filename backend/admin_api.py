@@ -6,6 +6,27 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+# Função utilitária para internacionalização de mensagens
+LANGUAGES = {
+    'pt': {
+        'missing_field': 'Campo obrigatório ausente',
+        'bet_inserted': 'Aposta inserida no banco!',
+        'error': 'Erro',
+        'notification_sent': 'Notificação enviada!',
+        'fail_register_event': 'Falha ao registrar evento.'
+    },
+    'en': {
+        'missing_field': 'Required field missing',
+        'bet_inserted': 'Bet inserted in database!',
+        'error': 'Error',
+        'notification_sent': 'Notification sent!',
+        'fail_register_event': 'Failed to register event.'
+    }
+}
+
+def get_lang():
+    return request.headers.get('Accept-Language', 'pt')[:2]
+
 @app.route('/api/admin/settings', methods=['GET', 'POST'])
 def admin_settings():
     if request.method == 'GET':
@@ -27,17 +48,22 @@ def admin_settings():
     elif request.method == 'POST':
         # Aqui você pode implementar lógica para atualizar configurações
         # (exemplo: salvar em arquivo/env)
-        return jsonify({'status': 'Configurações salvas (mock)!'}), 200
+        lang = get_lang()
+        status_msg = {
+            'pt': 'Configurações salvas (mock)!',
+            'en': 'Settings saved (mock)!'
+        }
+        return jsonify({'status': status_msg.get(lang, status_msg['pt'])}), 200
 
 @app.route('/api/admin/test-notification', methods=['POST'])
 def admin_test_notification():
     data = request.json
-    msg = data.get('message', 'Teste de notificação')
+    msg = data.get('message', LANGUAGES[get_lang()]['notification_sent'])
     try:
         notify_all(msg)
-        return jsonify({'status': 'Notificação enviada!'}), 200
+        return jsonify({'status': LANGUAGES[get_lang()]['notification_sent']}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
 
 @app.route('/api/admin/db-overview', methods=['GET'])
 def admin_db_overview():
@@ -47,7 +73,7 @@ def admin_db_overview():
         surebets = db.fetch('SELECT * FROM surebets LIMIT 10')
         return jsonify({'events': events, 'surebets': surebets})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
     finally:
         db.close()
 
@@ -58,7 +84,7 @@ def admin_insert_bet():
     required = ["event", "market", "selection", "odd", "bookmaker"]
     for field in required:
         if not data.get(field):
-            return jsonify({'error': f'Campo obrigatório ausente: {field}'}), 400
+            return jsonify({'error': f"{LANGUAGES[get_lang()]['missing_field']}: {field}"}), 400
     try:
         db = Database()
         # Inserção de evento (ou busca se já existe)
@@ -72,7 +98,7 @@ def admin_insert_bet():
         # Busca o id do evento
         event_row = db.fetch("SELECT id FROM events WHERE name=%s AND market=%s ORDER BY start_time DESC LIMIT 1", (event_name, market))
         if not event_row:
-            return jsonify({'error': 'Falha ao registrar evento.'}), 500
+            return jsonify({'error': LANGUAGES[get_lang()]['fail_register_event']}), 500
         event_id = event_row[0]['id']
         # Inserção da seleção
         selection = data["selection"]
@@ -84,9 +110,9 @@ def admin_insert_bet():
             ON CONFLICT (id) DO NOTHING
         """, (event_id, selection, odd, bookmaker))
         db.close()
-        return jsonify({'status': 'Aposta inserida no banco!'}), 200
+        return jsonify({'status': LANGUAGES[get_lang()]['bet_inserted']}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
 
 @app.route('/api/admin/suggestions', methods=['GET'])
 def admin_suggestions():
@@ -106,7 +132,7 @@ def admin_suggestions():
             'odds': odds
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

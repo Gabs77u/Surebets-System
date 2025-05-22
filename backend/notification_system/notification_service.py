@@ -52,3 +52,22 @@ def notify_all(message: str):
     asyncio.create_task(send_notification(message))
     send_telegram_notification(message)
     send_whatsapp_notification(message)
+
+# Função utilitária para internacionalização de notificações
+LANGUAGES = {
+    'pt': {
+        'new_surebet': 'Nova oportunidade de arbitragem detectada!',
+        'test_notification': 'Teste de notificação',
+    },
+    'en': {
+        'new_surebet': 'New arbitrage opportunity detected!',
+        'test_notification': 'Test notification',
+    }
+}
+
+def get_lang():
+    import os
+    return os.getenv('NOTIFY_LANG', 'pt')
+
+# Exemplo de uso: LANGUAGES[get_lang()]['new_surebet']
+# Substitua mensagens fixas por LANGUAGES[get_lang()][...] nas notificações enviadas.

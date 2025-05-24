@@ -48,7 +48,12 @@ LANGUAGES = {
         'odd_gt_1': 'Odd deve ser maior que 1.00!',
         'error': 'Erro',
         'test_sent': 'Notificação enviada!',
-        'test_fail': 'Falha ao enviar notificação.'
+        'test_fail': 'Falha ao enviar notificação.',
+        'games': 'Jogos',
+        'live_games': 'Jogos ao Vivo',
+        'upcoming_games': 'Próximos Jogos',
+        'status': 'Status',
+        'start_time': 'Início'
     },
     'en': {
         'dashboard_title': '🤑 Surebets Hunter Pro',
@@ -80,29 +85,39 @@ LANGUAGES = {
         'odd_gt_1': 'Odd must be greater than 1.00!',
         'error': 'Error',
         'test_sent': 'Notification sent!',
-        'test_fail': 'Failed to send notification.'
+        'test_fail': 'Failed to send notification.',
+        'games': 'Games',
+        'live_games': 'Live Games',
+        'upcoming_games': 'Upcoming Games',
+        'status': 'Status',
+        'start_time': 'Start Time'
     }
 }
 
 # Função para obter idioma do usuário (padrão: pt)
 def get_lang():
-    import dash
     ctx = dash.callback_context
     if ctx and ctx.states and 'session.data' in ctx.states and ctx.states['session.data']:
         return ctx.states['session.data'].get('lang', 'pt')
     return 'pt'
 
+# Estado de autenticação simples (apenas para exemplo)
+# O ctx já está disponível via dash.callback_context, não é necessário importar do dash
+
+def is_admin(session_data):
+    return session_data and session_data.get('is_admin')
+
 app.layout = dbc.Container([
     dcc.Store(id='session', storage_type='session'),
-    dcc.Dropdown(
-        id='lang-selector',
-        options=[{'label': '🇧🇷 Português', 'value': 'pt'}, {'label': '🇺🇸 English', 'value': 'en'}],
-        value='pt',
-        clearable=False,
-        style={'width': '200px', 'margin': '10px'}
-    ),
-    dcc.Tabs(id="main-tabs", value="tab-main", children=[
-        dcc.Tab(label=LANGUAGES[get_lang()]['dashboard_title'], value="tab-main", children=[
+    dbc.Row([
+        dbc.Col([
+            dcc.Input(id='admin-password', type='password', placeholder='Senha admin', debounce=True, style={'marginRight': '10px'}),
+            dbc.Button('Entrar como admin', id='admin-login-btn', color='primary'),
+            html.Span(id='admin-login-status', style={'marginLeft': '10px'})
+        ], width=12)
+    ]),
+    dcc.Tabs(id='main-tabs', value='dashboard', children=[
+        dcc.Tab(label=LANGUAGES[get_lang()]['dashboard_title'], value='dashboard', children=[
             dbc.Row([
                 dbc.Col(html.H1(LANGUAGES[get_lang()]['dashboard_title'], className="text-center mb-4"), width=12)
             ]),
@@ -204,6 +219,51 @@ app.layout = dbc.Container([
                 ], xs=12, sm=12, md=8, lg=9)
             ], className="mb-4"),
             dcc.Interval(id='refresh', interval=5000),
+        ]),
+        dcc.Tab(label=LANGUAGES[get_lang()].get('games', 'Jogos'), value="tab-games", children=[
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[get_lang()].get('live_games', 'Jogos ao Vivo'), className="h5"),
+                        dbc.CardBody([
+                            dash_table.DataTable(
+                                id='live-games-table',
+                                columns=[
+                                    {'name': LANGUAGES[get_lang()].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[get_lang()].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[get_lang()].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[get_lang()].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                style_cell={'textAlign': 'left'},
+                                style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},
+                                style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},
+                                page_size=10
+                            )
+                        ])
+                    ], className="mb-4"),
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[get_lang()].get('upcoming_games', 'Próximos Jogos'), className="h5"),
+                        dbc.CardBody([
+                            dash_table.DataTable(
+                                id='upcoming-games-table',
+                                columns=[
+                                    {'name': LANGUAGES[get_lang()].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[get_lang()].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[get_lang()].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[get_lang()].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                style_cell={'textAlign': 'left'},
+                                style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},
+                                style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},
+                                page_size=10
+                            )
+                        ])
+                    ])
+                ], width=12)
+            ]),
+            dcc.Interval(id='refresh-games', interval=5000),
         ]),
         dcc.Tab(label=LANGUAGES[get_lang()]['admin'], value="tab-admin", children=[
             dbc.Row([
@@ -396,6 +456,23 @@ def load_db_overview(tab):
     except Exception as e:
         return dbc.Alert(f"Erro ao carregar dados do banco: {e}", color="danger")
 
+@app.callback(
+    Output('live-games-table', 'data'),
+    Output('upcoming-games-table', 'data'),
+    Input('refresh-games', 'n_intervals'),
+    prevent_initial_call=True
+)
+def update_games_tables(n):
+    try:
+        live_resp = requests.get('http://localhost:5000/api/games/live', timeout=3)
+        upcoming_resp = requests.get('http://localhost:5000/api/games/upcoming', timeout=3)
+        live_games = live_resp.json().get('games', [])
+        upcoming_games = upcoming_resp.json().get('games', [])
+    except Exception as e:
+        live_games = []
+        upcoming_games = []
+    return live_games, upcoming_games
+
 # Adiciona um formulário para inserção de apostas no painel admin
 # (Removido: redefinição duplicada do app.layout)
 
@@ -471,30 +548,6 @@ def load_suggestions(tab, selection):
     except Exception:
         raise PreventUpdate
 
-# Validação avançada no frontend
-@app.callback(
-    Output("insert-bet-status", "children"),
-    Input("insert-bet-btn", "n_clicks"),
-    State("insert-event", "value"),
-    State("insert-market", "value"),
-    State("insert-selection", "value"),
-    State("insert-odd", "value"),
-    State("insert-bookmaker", "value"),
-    prevent_initial_call=True
-)
-def validate_bet(n_clicks, event, market, selection, odd, bookmaker):
-    if not n_clicks:
-        raise PreventUpdate
-    if not all([event, market, selection, odd, bookmaker]):
-        return dbc.Alert(LANGUAGES[get_lang()]['fill_all'], color="warning")
-    try:
-        odd = float(odd)
-        if odd < 1.01:
-            return dbc.Alert(LANGUAGES[get_lang()]['odd_gt_1'], color="danger")
-    except Exception:
-        return dbc.Alert(LANGUAGES[get_lang()]['invalid_odd'], color="danger")
-    return ""
-
 # Callback para inserir aposta, atualizar tabela e limpar formulário
 @app.callback(
     Output("insert-bet-status", "children"),
@@ -518,6 +571,12 @@ def insert_bet(n_clicks, event, market, selection, odd, bookmaker, table_data):
         raise PreventUpdate
     if not all([event, market, selection, odd, bookmaker]):
         return dbc.Alert(LANGUAGES[get_lang()]['fill_all'], color="warning"), table_data, event, market, selection, odd, bookmaker
+    try:
+        odd = float(odd)
+        if odd < 1.01:
+            return dbc.Alert(LANGUAGES[get_lang()]['odd_gt_1'], color="danger"), table_data, event, market, selection, odd, bookmaker
+    except Exception:
+        return dbc.Alert(LANGUAGES[get_lang()]['invalid_odd'], color="danger"), table_data, event, market, selection, odd, bookmaker
     # Envia para o backend (POST real)
     try:
         response = requests.post(
@@ -532,7 +591,6 @@ def insert_bet(n_clicks, event, market, selection, odd, bookmaker, table_data):
         )
         if response.status_code == 200:
             msg = dbc.Alert(LANGUAGES[get_lang()]['success_bet'], color="success")
-            # Atualiza tabela local
             new_row = {
                 'event': event,
                 'market': market,
@@ -542,7 +600,6 @@ def insert_bet(n_clicks, event, market, selection, odd, bookmaker, table_data):
             }
             updated_table = table_data or []
             updated_table.insert(0, new_row)
-            # Limpa o formulário
             return msg, updated_table, "", "", "", None, None
         else:
             return dbc.Alert("Erro ao inserir aposta no backend.", color="danger"), table_data, event, market, selection, odd, bookmaker
@@ -558,5 +615,109 @@ def insert_bet(n_clicks, event, market, selection, odd, bookmaker, table_data):
 def update_lang_store(lang):
     return {'lang': lang}
 
-if __name__ == '__main__':
-    app.run_server(debug=False, port=8050)
+@app.callback(
+    Output('session', 'data'),
+    Output('admin-login-status', 'children'),
+    Input('admin-login-btn', 'n_clicks'),
+    State('admin-password', 'value'),
+    prevent_initial_call=True
+)
+def admin_login(n_clicks, password):
+    if password == 'admin123':
+        return {'is_admin': True}, 'Acesso admin liberado!'
+    return {'is_admin': False}, 'Senha incorreta.'
+
+@app.callback(
+    Output('admin-content', 'children'),
+    Input('session', 'data'),
+    prevent_initial_call=True
+)
+def render_admin_content(session_data):
+    if not is_admin(session_data):
+        return dbc.Alert('Acesso restrito ao administrador.', color='danger')
+    # Conteúdo administrativo: tabelas de usuários, apostas, histórico, logs
+    return html.Div([
+        html.H4('Usuários'),
+        dash_table.DataTable(id='users-table', columns=[
+            {'name': 'ID', 'id': 'id'},
+            {'name': 'Usuário', 'id': 'username'},
+            {'name': 'Email', 'id': 'email'},
+            {'name': 'Criado em', 'id': 'created_at'}
+        ], data=[]),
+        html.Hr(),
+        html.H4('Apostas'),
+        dash_table.DataTable(id='bets-table', columns=[
+            {'name': 'ID', 'id': 'id'},
+            {'name': 'Usuário', 'id': 'username'},
+            {'name': 'Seleção', 'id': 'selection'},
+            {'name': 'Valor', 'id': 'amount'},
+            {'name': 'Data', 'id': 'placed_at'},
+            {'name': 'Status', 'id': 'status'}
+        ], data=[]),
+        html.Hr(),
+        html.H4('Histórico de Odds'),
+        dash_table.DataTable(id='odds-history-table', columns=[
+            {'name': 'ID', 'id': 'id'},
+            {'name': 'Seleção', 'id': 'selection'},
+            {'name': 'Odd Anterior', 'id': 'old_odds'},
+            {'name': 'Odd Nova', 'id': 'new_odds'},
+            {'name': 'Alterado em', 'id': 'changed_at'}
+        ], data=[]),
+        html.Hr(),
+        html.H4('Logs de Surebets'),
+        dash_table.DataTable(id='surebet-logs-table', columns=[
+            {'name': 'ID', 'id': 'id'},
+            {'name': 'Mercado', 'id': 'market'},
+            {'name': 'Detectado em', 'id': 'detected_at'},
+            {'name': 'Detalhes', 'id': 'details'}
+        ], data=[])
+    ])
+
+# Callbacks para buscar dados das tabelas administrativas
+@app.callback(
+    Output('users-table', 'data'),
+    Input('admin-content', 'children'),
+    prevent_initial_call=True
+)
+def update_users_table(_):
+    try:
+        resp = requests.get('http://localhost:5000/api/admin/users')
+        return resp.json().get('users', [])
+    except Exception:
+        return []
+
+@app.callback(
+    Output('bets-table', 'data'),
+    Input('admin-content', 'children'),
+    prevent_initial_call=True
+)
+def update_bets_table(_):
+    try:
+        resp = requests.get('http://localhost:5000/api/admin/bets')
+        return resp.json().get('bets', [])
+    except Exception:
+        return []
+
+@app.callback(
+    Output('odds-history-table', 'data'),
+    Input('admin-content', 'children'),
+    prevent_initial_call=True
+)
+def update_odds_history_table(_):
+    try:
+        resp = requests.get('http://localhost:5000/api/admin/odds-history')
+        return resp.json().get('odds_history', [])
+    except Exception:
+        return []
+
+@app.callback(
+    Output('surebet-logs-table', 'data'),
+    Input('admin-content', 'children'),
+    prevent_initial_call=True
+)
+def update_surebet_logs_table(_):
+    try:
+        resp = requests.get('http://localhost:5000/api/admin/surebet-logs')
+        return resp.json().get('surebet_logs', [])
+    except Exception:
+        return []

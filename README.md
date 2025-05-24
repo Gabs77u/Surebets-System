@@ -264,21 +264,3 @@ Dúvidas, sugestões ou bugs? Abra uma issue ou envie um e-mail para gabrielarau
 ## 🇺🇸 Contact
 
 Questions, suggestions or bugs? Open an issue or email gabrielaraujo.dev@gmail.com
-
----
-
-## 🇧🇷 Internacionalização Completa
-
-- O sistema agora é totalmente multilíngue (português e inglês):
-  - O painel Dash possui seletor de idioma (🇧🇷/🇺🇸) e todos os textos mudam dinamicamente.
-  - O backend Flask retorna mensagens de erro e status no idioma do usuário (Accept-Language).
-  - Notificações e respostas de API administrativas são bilíngues.
-
-## 🇺🇸 Full Internationalization
-
-- The system is now fully multilingual (Portuguese and English):
-  - The Dash panel has a language selector (🇧🇷/🇺🇸) and all texts change dynamically.
-  - The Flask backend returns error and status messages in the user's language (Accept-Language).
-  - Notifications and admin API responses are bilingual.
-
----

@@ -2,9 +2,10 @@ from flask import Flask, jsonify, request
 from config import settings
 from backend.notification_system import notify_all
 from backend.database.database import Database
-from datetime import datetime
+from backend.games_api import bp as games_api_bp
 
 app = Flask(__name__)
+app.register_blueprint(games_api_bp)
 
 # Função utilitária para internacionalização de mensagens
 LANGUAGES = {
@@ -133,6 +134,62 @@ def admin_suggestions():
         })
     except Exception as e:
         return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
+
+@app.route('/api/admin/users', methods=['GET'])
+def get_users():
+    try:
+        db = Database()
+        users = db.fetch("SELECT id, username, email, created_at FROM users ORDER BY id ASC")
+        db.close()
+        return jsonify({'users': users})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/bets', methods=['GET'])
+def get_bets():
+    try:
+        db = Database()
+        bets = db.fetch("""
+            SELECT b.id, u.username, s.name as selection, b.amount, b.placed_at, b.status
+            FROM bets b
+            JOIN users u ON b.user_id = u.id
+            JOIN selections s ON b.selection_id = s.id
+            ORDER BY b.placed_at DESC
+        """)
+        db.close()
+        return jsonify({'bets': bets})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/odds-history', methods=['GET'])
+def get_odds_history():
+    try:
+        db = Database()
+        history = db.fetch("""
+            SELECT oh.id, s.name as selection, oh.old_odds, oh.new_odds, oh.changed_at
+            FROM odds_history oh
+            JOIN selections s ON oh.selection_id = s.id
+            ORDER BY oh.changed_at DESC
+        """)
+        db.close()
+        return jsonify({'odds_history': history})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/surebet-logs', methods=['GET'])
+def get_surebet_logs():
+    try:
+        db = Database()
+        logs = db.fetch("""
+            SELECT sl.id, sb.market, sl.detected_at, sl.details
+            FROM surebet_logs sl
+            JOIN surebets sb ON sl.surebet_id = sb.id
+            ORDER BY sl.detected_at DESC
+        """)
+        db.close()
+        return jsonify({'surebet_logs': logs})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

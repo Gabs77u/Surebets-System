@@ -259,8 +259,8 @@ MIT License. See the [LICENSE](LICENSE) file.
 
 ## 🇧🇷 Contato
 
-Dúvidas, sugestões ou bugs? Abra uma issue ou envie um e-mail para gabrielaraujo.dev@gmail.com
+Dúvidas, sugestões ou bugs? Abra uma issue ou envie um e-mail para gabrielaraujoseven@gmail.com
 
 ## 🇺🇸 Contact
 
-Questions, suggestions or bugs? Open an issue or email gabrielaraujo.dev@gmail.com
+Questions, suggestions or bugs? Open an issue or email gabrielaraujoseven@gmail.com

@@ -5,6 +5,10 @@ import threading
 import locale
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import subprocess
+import sys
+import os
+import time
 
 # Internacionalização básica
 LANGUAGES = {
@@ -102,7 +106,7 @@ class SurebetsApp(tk.Tk):
 
     def create_surebets_tab(self):
         frame = ttk.Frame(self.notebook)
-        self.notebook.insert(0, frame, text=L['dashboard_title'])
+        self.notebook.add(frame, text=L['dashboard_title'])
         # Filtros
         filter_frame = ttk.LabelFrame(frame, text=L['filters'])
         filter_frame.pack(fill='x', padx=10, pady=5)
@@ -140,28 +144,44 @@ class SurebetsApp(tk.Tk):
         self.update_surebets_table()
 
     def update_surebets_table(self):
-        def fetch():
+        # Pegue os valores do Tkinter ANTES de iniciar a thread
+        sport = self.sport_var.get()
+        min_profit = self.min_profit_var.get()
+        bookmakers = [b.strip() for b in self.bookmaker_var.get().split(',') if b.strip()]
+        search = self.search_var.get().lower()
+        def fetch(sport, min_profit, bookmakers, search):
             try:
                 payload = {
-                    'sports': [self.sport_var.get()],
-                    'min_profit': self.min_profit_var.get(),
-                    'bookmakers': [b.strip() for b in self.bookmaker_var.get().split(',') if b.strip()]
+                    'sports': [sport],
+                    'min_profit': min_profit,
+                    'bookmakers': bookmakers
                 }
                 resp = requests.post(f'{API_BASE}/opportunities', json=payload, timeout=3)
                 data = resp.json()
-                # Filtro de busca local
-                search = self.search_var.get().lower()
                 if search:
                     data = [item for item in data if search in item['event'].lower() or search in item['market'].lower()]
-                self.surebets_tree.delete(*self.surebets_tree.get_children())
-                for item in data:
-                    self.surebets_tree.insert('', 'end', values=(item['event'], item['market'], f"{item['profit']:.2f}%", ' vs '.join(item['bookmakers']), L['details']))
-                self.surebets_status.config(text='')
+                def update_table():
+                    self.surebets_tree.delete(*self.surebets_tree.get_children())
+                    for item in data:
+                        self.surebets_tree.insert('', 'end', values=(item['event'], item['market'], f"{item['profit']:.2f}%", ' vs '.join(item['bookmakers']), L['details']))
+                    self.surebets_status.config(text='')
+                try:
+                    self.after(0, update_table)
+                except RuntimeError:
+                    pass
             except Exception as e:
-                self.surebets_tree.delete(*self.surebets_tree.get_children())
-                self.surebets_status.config(text=f"{L['error']}: {e}")
-            self.after(5000, self.update_surebets_table)
-        threading.Thread(target=fetch, daemon=True).start()
+                def show_error():
+                    self.surebets_tree.delete(*self.surebets_tree.get_children())
+                    self.surebets_status.config(text=f"{L['error']}: {e}")
+                try:
+                    self.after(0, show_error)
+                except RuntimeError:
+                    pass
+            try:
+                self.after(5000, self.update_surebets_table)
+            except RuntimeError:
+                pass
+        threading.Thread(target=fetch, args=(sport, min_profit, bookmakers, search), daemon=True).start()
 
     def show_surebet_details(self, event):
         item_id = self.surebets_tree.focus()
@@ -194,20 +214,25 @@ class SurebetsApp(tk.Tk):
         self.update_games_tables()
 
     def update_games_tables(self):
+        # Pegue os valores do Tkinter ANTES de iniciar a thread (não há variáveis Tkinter, mas mantenha padrão)
         def fetch():
             try:
                 live = requests.get(f'{API_BASE}/games/live', timeout=3).json().get('games', [])
                 up = requests.get(f'{API_BASE}/games/upcoming', timeout=3).json().get('games', [])
-                self.live_tree.delete(*self.live_tree.get_children())
-                for g in live:
-                    self.live_tree.insert('', 'end', values=(g.get('name'), g.get('status'), g.get('start_time'), g.get('bookmaker')))
-                self.up_tree.delete(*self.up_tree.get_children())
-                for g in up:
-                    self.up_tree.insert('', 'end', values=(g.get('name'), g.get('status'), g.get('start_time'), g.get('bookmaker')))
+                def update_tables():
+                    self.live_tree.delete(*self.live_tree.get_children())
+                    for g in live:
+                        self.live_tree.insert('', 'end', values=(g.get('name'), g.get('status'), g.get('start_time'), g.get('bookmaker')))
+                    self.up_tree.delete(*self.up_tree.get_children())
+                    for g in up:
+                        self.up_tree.insert('', 'end', values=(g.get('name'), g.get('status'), g.get('start_time'), g.get('bookmaker')))
+                self.after(0, update_tables)
             except Exception as e:
-                self.live_tree.delete(*self.live_tree.get_children())
-                self.up_tree.delete(*self.up_tree.get_children())
-                self.surebets_status.config(text=f"{L['error']}: {e}")
+                def show_error():
+                    self.live_tree.delete(*self.live_tree.get_children())
+                    self.up_tree.delete(*self.up_tree.get_children())
+                    self.surebets_status.config(text=f"{L['error']}: {e}")
+                self.after(0, show_error)
             self.after(5000, self.update_games_tables)
         threading.Thread(target=fetch, daemon=True).start()
 
@@ -362,6 +387,30 @@ class SurebetsApp(tk.Tk):
         canvas2.draw()
         canvas2.get_tk_widget().pack(pady=10)
 
+def wait_backend_ready(url, timeout=20):
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            resp = requests.get(url, timeout=2)
+            if resp.status_code == 200:
+                return True
+        except Exception:
+            time.sleep(1)
+    return False
+
 if __name__ == '__main__':
+    # Inicia o backend automaticamente
+    backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'app.py')
+    backend_path = os.path.abspath(backend_path)
+    python_exe = sys.executable
+    try:
+        subprocess.Popen([python_exe, backend_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print(f'Não foi possível iniciar o backend automaticamente: {e}')
+    # Aguarda o backend responder antes de abrir o Tkinter
+    print('Aguardando backend iniciar...')
+    if not wait_backend_ready(f'{API_BASE}/games/live'):
+        print('Backend não respondeu a tempo. Fechando...')
+        sys.exit(1)
     app = SurebetsApp()
     app.mainloop()

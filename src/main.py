@@ -43,6 +43,24 @@ def run_admin_api():
     env = os.environ.copy()
     return subprocess.Popen([sys.executable, ADMIN_API_PATH], env=env)
 
+def wait_service_ready(url, timeout=30):
+    import requests
+    import time
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            resp = requests.get(url, timeout=2)
+            if resp.status_code == 200:
+                return True
+        except Exception:
+            time.sleep(1)
+    return False
+
+def run_tkinter_frontend():
+    frontend_path = BASE_DIR / "frontend" / "tinker_ui.py"
+    env = os.environ.copy()
+    return subprocess.Popen([sys.executable, str(frontend_path)], env=env)
+
 if __name__ == "__main__":
     print("Iniciando Surebets System...")
     print("Se o antivírus acusar falso positivo, adicione uma exceção para este executável.")
@@ -51,10 +69,32 @@ if __name__ == "__main__":
     processes.append(run_admin_api())
     print("Painel Dash: http://localhost:8050")
     print("Painel Admin: http://localhost:5000")
+
+    # Aguarda os serviços responderem
+    print("Aguardando backend Dash...")
+    if not wait_service_ready("http://localhost:8050", timeout=40):
+        print("Dash não respondeu a tempo. Encerrando...")
+        for p in processes:
+            p.terminate()
+        sys.exit(1)
+    print("Aguardando backend Admin API...")
+    if not wait_service_ready("http://localhost:5000/api/games/live", timeout=40):
+        print("Admin API não respondeu a tempo. Encerrando...")
+        for p in processes:
+            p.terminate()
+        sys.exit(1)
+
+    # Inicia o frontend Tkinter
+    frontend_proc = run_tkinter_frontend()
+    processes.append(frontend_proc)
+
     try:
         input("Pressione Enter para encerrar...")
     finally:
         for p in processes:
             p.terminate()
-            p.wait()
+            try:
+                p.wait(timeout=5)
+            except Exception:
+                pass
         print("Surebets System finalizado.")

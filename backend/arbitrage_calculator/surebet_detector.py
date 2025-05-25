@@ -9,8 +9,11 @@ class SurebetDetector:
 
     @staticmethod
     def calculate_arbitrage(odds: List[float]) -> float:
-        """Calcula o índice de arbitragem. Se < 1, há surebet."""
-        return sum(1/o for o in odds if o > 0)
+        """Calcula o índice de arbitragem. Se < 1, há surebet. Odds devem ser > 0."""
+        odds = [o for o in odds if o and o > 0]
+        if not odds or any(o <= 1 for o in odds):
+            return 1.0  # Não há arbitragem válida
+        return sum(1/o for o in odds)
 
     @staticmethod
     def find_surebets(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

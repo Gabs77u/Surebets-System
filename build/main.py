@@ -6,7 +6,6 @@ from pathlib import Path
 # Caminhos relativos robustos
 BASE_DIR = Path(__file__).parent.resolve()
 BACKEND_DIR = BASE_DIR / "backend"
-SRC_DATA_DIR = BASE_DIR / "src" / "data"
 DB_SCHEMA = BACKEND_DIR / "database" / "schema.sql"
 
 DASH_PATH = str(BACKEND_DIR / "app.py")
@@ -38,12 +37,10 @@ def init_database():
 
 def run_dash():
     env = os.environ.copy()
-    env["STATIC_DATA"] = str(SRC_DATA_DIR)
     return subprocess.Popen([sys.executable, DASH_PATH], env=env)
 
 def run_admin_api():
     env = os.environ.copy()
-    env["STATIC_DATA"] = str(SRC_DATA_DIR)
     return subprocess.Popen([sys.executable, ADMIN_API_PATH], env=env)
 
 if __name__ == "__main__":
@@ -59,4 +56,5 @@ if __name__ == "__main__":
     finally:
         for p in processes:
             p.terminate()
+            p.wait()
         print("Surebets System finalizado.")

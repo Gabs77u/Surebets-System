@@ -4,10 +4,14 @@ from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import requests
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.bookmakers import BOOKMAKERS_LIST
 import dash
 from dash.exceptions import PreventUpdate
 import json
+import plotly.graph_objs as go
 
 # BOOKMAKERS centralizado do módulo backend.bookmakers
 BOOKMAKERS = [
@@ -107,6 +111,9 @@ def get_lang():
 def is_admin(session_data):
     return session_data and session_data.get('is_admin')
 
+# Use idioma padrão para o layout inicial
+DEFAULT_LANG = 'pt'
+
 app.layout = dbc.Container([
     dcc.Store(id='session', storage_type='session'),
     dbc.Row([
@@ -117,16 +124,16 @@ app.layout = dbc.Container([
         ], width=12)
     ]),
     dcc.Tabs(id='main-tabs', value='dashboard', children=[
-        dcc.Tab(label=LANGUAGES[get_lang()]['dashboard_title'], value='dashboard', children=[
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG]['dashboard_title'], value='dashboard', children=[
             dbc.Row([
-                dbc.Col(html.H1(LANGUAGES[get_lang()]['dashboard_title'], className="text-center mb-4"), width=12)
+                dbc.Col(html.H1(LANGUAGES[DEFAULT_LANG]['dashboard_title'], className="text-center mb-4"), width=12)
             ]),
             dbc.Row([
                 dbc.Col([
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['filters'], className="h5"),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['filters'], className="h5"),
                         dbc.CardBody([
-                            html.Label(LANGUAGES[get_lang()]['sport'], className="mb-2"),
+                            html.Label(LANGUAGES[DEFAULT_LANG]['sport'], className="mb-2"),
                             dcc.Dropdown(
                                 id='sport-filter',
                                 options=[
@@ -136,47 +143,44 @@ app.layout = dbc.Container([
                                 ],
                                 value=['soccer'],
                                 multi=True,
-                                placeholder="Selecione o(s) esporte(s)",
-                                tooltip={'placement': 'top', 'always_visible': False, 'text': 'Filtre por esporte'}
+                                placeholder="Selecione o(s) esporte(s)"
                             ),
                             html.Hr(),
-                            html.Label(LANGUAGES[get_lang()]['bookmakers'], className="mb-2"),
+                            html.Label(LANGUAGES[DEFAULT_LANG]['bookmakers'], className="mb-2"),
                             dcc.Dropdown(
                                 id='bookmaker-filter',
                                 options=BOOKMAKERS,
                                 value=[],
                                 multi=True,
-                                placeholder="Selecione as casas",
-                                tooltip={'placement': 'top', 'always_visible': False, 'text': 'Filtre por casa de aposta'}
+                                placeholder="Selecione as casas"
                             ),
                             html.Hr(),
-                            html.Label(LANGUAGES[get_lang()]['min_profit'], className="mb-2"),
+                            html.Label(LANGUAGES[DEFAULT_LANG]['min_profit'], className="mb-2"),
                             dcc.Slider(
                                 id='profit-slider',
                                 min=0,
                                 max=20,
                                 step=0.5,
                                 value=2,
-                                marks={i: f'{i}%' for i in range(0, 21, 2)},
-                                tooltip={"placement": "bottom", "always_visible": False}
+                                marks={i: f'{i}%' for i in range(0, 21, 2)}
                             ),
                         ])
                     ], className="mb-4")
                 ], xs=12, sm=12, md=4, lg=3),
                 dbc.Col([
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['real_time_opportunities'], className="h5"),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['real_time_opportunities'], className="h5"),
                         dbc.CardBody([
-                            dbc.Input(id="search-input", placeholder=LANGUAGES[get_lang()]['search_event_market'], type="text", className="mb-2"),
+                            dbc.Input(id="search-input", placeholder=LANGUAGES[DEFAULT_LANG]['search_event_market'], type="text", className="mb-2"),
                             dbc.Spinner(children=[
                                 dash_table.DataTable(
                                     id='live-table',
                                     columns=[
-                                        {'name': LANGUAGES[get_lang()]['event'], 'id': 'event', 'deletable': False, 'selectable': True},
-                                        {'name': LANGUAGES[get_lang()]['market'], 'id': 'market', 'deletable': False, 'selectable': True},
-                                        {'name': LANGUAGES[get_lang()]['min_profit'], 'id': 'profit', 'deletable': False, 'selectable': True, 'type': 'numeric'},
-                                        {'name': LANGUAGES[get_lang()]['bookmakers'], 'id': 'bookmakers', 'deletable': False, 'selectable': True},
-                                        {'name': LANGUAGES[get_lang()]['actions'], 'id': 'actions', 'presentation': 'markdown'}
+                                        {'name': LANGUAGES[DEFAULT_LANG]['event'], 'id': 'event', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['market'], 'id': 'market', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['min_profit'], 'id': 'profit', 'deletable': False, 'selectable': True, 'type': 'numeric'},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['bookmakers'], 'id': 'bookmakers', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['actions'], 'id': 'actions', 'presentation': 'markdown'}
                                     ],
                                     style_table={'overflowX': 'auto'},
                                     style_cell={'textAlign': 'left'},
@@ -191,26 +195,19 @@ app.layout = dbc.Container([
                                     sort_action="native",
                                     filter_action="native",
                                     row_selectable="single",
-                                    page_size=10,
-                                    tooltip_header={
-                                        'event': 'Nome do evento',
-                                        'market': 'Tipo de mercado',
-                                        'profit': 'Lucro estimado',
-                                        'bookmakers': 'Casas envolvidas',
-                                        'actions': 'Clique para detalhes'
-                                    }
+                                    page_size=10
                                 )
                             ], color="primary", fullscreen=False, id="loading-spinner"),
-                            dbc.Button(LANGUAGES[get_lang()]['update_now'], id="manual-refresh", color="info", className="mb-2"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['update_now'], id="manual-refresh", color="info", className="mb-2"),
                             html.Div(id="error-message"),
                         ])
                     ]),
                     dbc.Modal(
                         [
-                            dbc.ModalHeader(dbc.ModalTitle(LANGUAGES[get_lang()]['details'])),
+                            dbc.ModalHeader(dbc.ModalTitle(LANGUAGES[DEFAULT_LANG]['details'])),
                             dbc.ModalBody(id="modal-body"),
                             dbc.ModalFooter(
-                                dbc.Button(LANGUAGES[get_lang()]['close'], id="close-modal", className="ms-auto", n_clicks=0)
+                                dbc.Button(LANGUAGES[DEFAULT_LANG]['close'], id="close-modal", className="ms-auto", n_clicks=0)
                             ),
                         ],
                         id="details-modal",
@@ -219,20 +216,22 @@ app.layout = dbc.Container([
                 ], xs=12, sm=12, md=8, lg=9)
             ], className="mb-4"),
             dcc.Interval(id='refresh', interval=5000),
+            # Gráficos Interativos
+            html.Div(id='dashboard-graphs', className="mb-4"),
         ]),
-        dcc.Tab(label=LANGUAGES[get_lang()].get('games', 'Jogos'), value="tab-games", children=[
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG].get('games', 'Jogos'), value="tab-games", children=[
             dbc.Row([
                 dbc.Col([
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()].get('live_games', 'Jogos ao Vivo'), className="h5"),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG].get('live_games', 'Jogos ao Vivo'), className="h5"),
                         dbc.CardBody([
                             dash_table.DataTable(
                                 id='live-games-table',
                                 columns=[
-                                    {'name': LANGUAGES[get_lang()].get('event', 'Evento'), 'id': 'name'},
-                                    {'name': LANGUAGES[get_lang()].get('status', 'Status'), 'id': 'status'},
-                                    {'name': LANGUAGES[get_lang()].get('start_time', 'Início'), 'id': 'start_time'},
-                                    {'name': LANGUAGES[get_lang()].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
                                 ],
                                 style_table={'overflowX': 'auto'},
                                 style_cell={'textAlign': 'left'},
@@ -243,15 +242,15 @@ app.layout = dbc.Container([
                         ])
                     ], className="mb-4"),
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()].get('upcoming_games', 'Próximos Jogos'), className="h5"),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG].get('upcoming_games', 'Próximos Jogos'), className="h5"),
                         dbc.CardBody([
                             dash_table.DataTable(
                                 id='upcoming-games-table',
                                 columns=[
-                                    {'name': LANGUAGES[get_lang()].get('event', 'Evento'), 'id': 'name'},
-                                    {'name': LANGUAGES[get_lang()].get('status', 'Status'), 'id': 'status'},
-                                    {'name': LANGUAGES[get_lang()].get('start_time', 'Início'), 'id': 'start_time'},
-                                    {'name': LANGUAGES[get_lang()].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
                                 ],
                                 style_table={'overflowX': 'auto'},
                                 style_cell={'textAlign': 'left'},
@@ -265,58 +264,58 @@ app.layout = dbc.Container([
             ]),
             dcc.Interval(id='refresh-games', interval=5000),
         ]),
-        dcc.Tab(label=LANGUAGES[get_lang()]['admin'], value="tab-admin", children=[
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG]['admin'], value="tab-admin", children=[
             dbc.Row([
                 dbc.Col([
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['settings']),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['settings']),
                         dbc.CardBody([
                             html.Div(id="admin-settings"),
-                            dbc.Button(LANGUAGES[get_lang()]['save_settings'], id="save-settings-btn", color="primary", className="mt-2"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['save_settings'], id="save-settings-btn", color="primary", className="mt-2"),
                             html.Div(id="settings-save-status", className="mt-2")
                         ])
                     ], className="mb-4"),
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['notifications']),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['notifications']),
                         dbc.CardBody([
                             dbc.Input(id="test-notification-msg", placeholder="Mensagem de teste", type="text"),
-                            dbc.Button(LANGUAGES[get_lang()]['send_test'], id="test-notification-btn", color="info", className="mt-2"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['send_test'], id="test-notification-btn", color="info", className="mt-2"),
                             html.Div(id="notification-test-status", className="mt-2")
                         ])
                     ], className="mb-4"),
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['db']),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['db']),
                         dbc.CardBody([
                             html.Div(id="db-overview")
                         ])
                     ]),
                     dbc.Card([
-                        dbc.CardHeader(LANGUAGES[get_lang()]['insert_bet']),
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['insert_bet']),
                         dbc.CardBody([
                             dbc.Form([
                                 dbc.Row([
                                     dbc.Col([
-                                        dbc.Label(LANGUAGES[get_lang()]['event']),
-                                        dcc.Dropdown(id="insert-event", placeholder="Nome do evento", options=[], autoComplete="on"),
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['event']),
+                                        dcc.Dropdown(id="insert-event", placeholder="Nome do evento", options=[]),
                                     ], md=4),
                                     dbc.Col([
-                                        dbc.Label(LANGUAGES[get_lang()]['market']),
-                                        dcc.Input(id="insert-market", type="text", placeholder="Mercado (ex: 1X2)", debounce=True, autoComplete="on"),
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['market']),
+                                        dcc.Input(id="insert-market", type="text", placeholder="Mercado (ex: 1X2)", debounce=True),
                                     ], md=2),
                                     dbc.Col([
-                                        dbc.Label(LANGUAGES[get_lang()]['selection']),
-                                        dcc.Dropdown(id="insert-selection", placeholder="Seleção (ex: Casa)", options=[], autoComplete="on"),
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['selection']),
+                                        dcc.Dropdown(id="insert-selection", placeholder="Seleção (ex: Casa)", options=[]),
                                     ], md=2),
                                     dbc.Col([
-                                        dbc.Label(LANGUAGES[get_lang()]['odd']),
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['odd']),
                                         dcc.Input(id="insert-odd", type="number", placeholder="Odd", debounce=True, min=1.01, step=0.01),
                                     ], md=2),
                                     dbc.Col([
-                                        dbc.Label(LANGUAGES[get_lang()]['bookmaker']),
-                                        dcc.Dropdown(id="insert-bookmaker", options=BOOKMAKERS, placeholder="Selecione a casa", autoComplete="on"),
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['bookmaker']),
+                                        dcc.Dropdown(id="insert-bookmaker", options=BOOKMAKERS, placeholder="Selecione a casa"),
                                     ], md=2),
                                 ], className="mb-2"),
-                                dbc.Button(LANGUAGES[get_lang()]['insert_bet'], id="insert-bet-btn", color="success", className="mt-2"),
+                                dbc.Button(LANGUAGES[DEFAULT_LANG]['insert_bet'], id="insert-bet-btn", color="success", className="mt-2"),
                                 html.Div(id="insert-bet-status", className="mt-2"),
                             ])
                         ])
@@ -473,8 +472,399 @@ def update_games_tables(n):
         upcoming_games = []
     return live_games, upcoming_games
 
-# Adiciona um formulário para inserção de apostas no painel admin
-# (Removido: redefinição duplicada do app.layout)
+# Função auxiliar para buscar dados de odds históricos e distribuição
+def get_odds_history():
+    try:
+        resp = requests.get('http://localhost:5000/api/odds-history', timeout=3)
+        return resp.json()
+    except Exception:
+        return []
+
+def get_opportunity_distribution():
+    try:
+        resp = requests.get('http://localhost:5000/api/opportunity-distribution', timeout=3)
+        return resp.json()
+    except Exception:
+        return {}
+
+# Adiciona gráficos ao dashboard principal
+
+def render_dashboard_graphs():
+    odds_history = get_odds_history()
+    distribution = get_opportunity_distribution()
+    # Gráfico de evolução de odds
+    odds_fig = go.Figure()
+    for event in odds_history:
+        odds_fig.add_trace(go.Scatter(x=event['timestamps'], y=event['odds'], mode='lines+markers', name=event['event']))
+    odds_fig.update_layout(title='Evolução das Odds', xaxis_title='Tempo', yaxis_title='Odd')
+    # Gráfico de distribuição de oportunidades
+    dist_fig = go.Figure(data=[go.Pie(labels=list(distribution.keys()), values=list(distribution.values()))])
+    dist_fig.update_layout(title='Distribuição de Oportunidades por Esporte')
+    return html.Div([
+        html.Hr(),
+        html.H4('Gráficos Interativos'),
+        dcc.Graph(figure=odds_fig),
+        dcc.Graph(figure=dist_fig)
+    ])
+
+# Adiciona os gráficos ao dashboard
+app.layout = dbc.Container([
+    dcc.Store(id='session', storage_type='session'),
+    dbc.Row([
+        dbc.Col([
+            dcc.Input(id='admin-password', type='password', placeholder='Senha admin', debounce=True, style={'marginRight': '10px'}),
+            dbc.Button('Entrar como admin', id='admin-login-btn', color='primary'),
+            html.Span(id='admin-login-status', style={'marginLeft': '10px'})
+        ], width=12)
+    ]),
+    dcc.Tabs(id='main-tabs', value='dashboard', children=[
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG]['dashboard_title'], value='dashboard', children=[
+            dbc.Row([
+                dbc.Col(html.H1(LANGUAGES[DEFAULT_LANG]['dashboard_title'], className="text-center mb-4"), width=12)
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['filters'], className="h5"),
+                        dbc.CardBody([
+                            html.Label(LANGUAGES[DEFAULT_LANG]['sport'], className="mb-2"),
+                            dcc.Dropdown(
+                                id='sport-filter',
+                                options=[
+                                    {'label': '⚽ Futebol', 'value': 'soccer'},
+                                    {'label': '🎾 Tênis', 'value': 'tennis'},
+                                    {'label': '🏀 Basquete', 'value': 'basketball'}
+                                ],
+                                value=['soccer'],
+                                multi=True,
+                                placeholder="Selecione o(s) esporte(s)"
+                            ),
+                            html.Hr(),
+                            html.Label(LANGUAGES[DEFAULT_LANG]['bookmakers'], className="mb-2"),
+                            dcc.Dropdown(
+                                id='bookmaker-filter',
+                                options=BOOKMAKERS,
+                                value=[],
+                                multi=True,
+                                placeholder="Selecione as casas"
+                            ),
+                            html.Hr(),
+                            html.Label(LANGUAGES[DEFAULT_LANG]['min_profit'], className="mb-2"),
+                            dcc.Slider(
+                                id='profit-slider',
+                                min=0,
+                                max=20,
+                                step=0.5,
+                                value=2,
+                                marks={i: f'{i}%' for i in range(0, 21, 2)}
+                            ),
+                        ])
+                    ], className="mb-4")
+                ], xs=12, sm=12, md=4, lg=3),
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['real_time_opportunities'], className="h5"),
+                        dbc.CardBody([
+                            dbc.Input(id="search-input", placeholder=LANGUAGES[DEFAULT_LANG]['search_event_market'], type="text", className="mb-2"),
+                            dbc.Spinner(children=[
+                                dash_table.DataTable(
+                                    id='live-table',
+                                    columns=[
+                                        {'name': LANGUAGES[DEFAULT_LANG]['event'], 'id': 'event', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['market'], 'id': 'market', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['min_profit'], 'id': 'profit', 'deletable': False, 'selectable': True, 'type': 'numeric'},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['bookmakers'], 'id': 'bookmakers', 'deletable': False, 'selectable': True},
+                                        {'name': LANGUAGES[DEFAULT_LANG]['actions'], 'id': 'actions', 'presentation': 'markdown'}
+                                    ],
+                                    style_table={'overflowX': 'auto'},
+                                    style_cell={'textAlign': 'left'},
+                                    style_header={
+                                        'backgroundColor': 'rgb(30, 30, 30)',
+                                        'color': 'white'
+                                    },
+                                    style_data={
+                                        'backgroundColor': 'rgb(50, 50, 50)',
+                                        'color': 'white'
+                                    },
+                                    sort_action="native",
+                                    filter_action="native",
+                                    row_selectable="single",
+                                    page_size=10
+                                )
+                            ], color="primary", fullscreen=False, id="loading-spinner"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['update_now'], id="manual-refresh", color="info", className="mb-2"),
+                            html.Div(id="error-message"),
+                        ])
+                    ]),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(dbc.ModalTitle(LANGUAGES[DEFAULT_LANG]['details'])),
+                            dbc.ModalBody(id="modal-body"),
+                            dbc.ModalFooter(
+                                dbc.Button(LANGUAGES[DEFAULT_LANG]['close'], id="close-modal", className="ms-auto", n_clicks=0)
+                            ),
+                        ],
+                        id="details-modal",
+                        is_open=False,
+                    ),
+                ], xs=12, sm=12, md=8, lg=9)
+            ], className="mb-4"),
+            dcc.Interval(id='refresh', interval=5000),
+            # Gráficos Interativos
+            html.Div(id='dashboard-graphs', className="mb-4"),
+        ]),
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG].get('games', 'Jogos'), value="tab-games", children=[
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG].get('live_games', 'Jogos ao Vivo'), className="h5"),
+                        dbc.CardBody([
+                            dash_table.DataTable(
+                                id='live-games-table',
+                                columns=[
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                style_cell={'textAlign': 'left'},
+                                style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},
+                                style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},
+                                page_size=10
+                            )
+                        ])
+                    ], className="mb-4"),
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG].get('upcoming_games', 'Próximos Jogos'), className="h5"),
+                        dbc.CardBody([
+                            dash_table.DataTable(
+                                id='upcoming-games-table',
+                                columns=[
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('event', 'Evento'), 'id': 'name'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('status', 'Status'), 'id': 'status'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('start_time', 'Início'), 'id': 'start_time'},
+                                    {'name': LANGUAGES[DEFAULT_LANG].get('bookmaker', 'Casa'), 'id': 'bookmaker'}
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                style_cell={'textAlign': 'left'},
+                                style_header={'backgroundColor': 'rgb(30, 30, 30)', 'color': 'white'},
+                                style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white'},
+                                page_size=10
+                            )
+                        ])
+                    ])
+                ], width=12)
+            ]),
+            dcc.Interval(id='refresh-games', interval=5000),
+        ]),
+        dcc.Tab(label=LANGUAGES[DEFAULT_LANG]['admin'], value="tab-admin", children=[
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['settings']),
+                        dbc.CardBody([
+                            html.Div(id="admin-settings"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['save_settings'], id="save-settings-btn", color="primary", className="mt-2"),
+                            html.Div(id="settings-save-status", className="mt-2")
+                        ])
+                    ], className="mb-4"),
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['notifications']),
+                        dbc.CardBody([
+                            dbc.Input(id="test-notification-msg", placeholder="Mensagem de teste", type="text"),
+                            dbc.Button(LANGUAGES[DEFAULT_LANG]['send_test'], id="test-notification-btn", color="info", className="mt-2"),
+                            html.Div(id="notification-test-status", className="mt-2")
+                        ])
+                    ], className="mb-4"),
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['db']),
+                        dbc.CardBody([
+                            html.Div(id="db-overview")
+                        ])
+                    ]),
+                    dbc.Card([
+                        dbc.CardHeader(LANGUAGES[DEFAULT_LANG]['insert_bet']),
+                        dbc.CardBody([
+                            dbc.Form([
+                                dbc.Row([
+                                    dbc.Col([
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['event']),
+                                        dcc.Dropdown(id="insert-event", placeholder="Nome do evento", options=[]),
+                                    ], md=4),
+                                    dbc.Col([
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['market']),
+                                        dcc.Input(id="insert-market", type="text", placeholder="Mercado (ex: 1X2)", debounce=True),
+                                    ], md=2),
+                                    dbc.Col([
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['selection']),
+                                        dcc.Dropdown(id="insert-selection", placeholder="Seleção (ex: Casa)", options=[]),
+                                    ], md=2),
+                                    dbc.Col([
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['odd']),
+                                        dcc.Input(id="insert-odd", type="number", placeholder="Odd", debounce=True, min=1.01, step=0.01),
+                                    ], md=2),
+                                    dbc.Col([
+                                        dbc.Label(LANGUAGES[DEFAULT_LANG]['bookmaker']),
+                                        dcc.Dropdown(id="insert-bookmaker", options=BOOKMAKERS, placeholder="Selecione a casa"),
+                                    ], md=2),
+                                ], className="mb-2"),
+                                dbc.Button(LANGUAGES[DEFAULT_LANG]['insert_bet'], id="insert-bet-btn", color="success", className="mt-2"),
+                                html.Div(id="insert-bet-status", className="mt-2"),
+                            ])
+                        ])
+                    ], className="mb-4"),
+                ], width=12)
+            ])
+        ])
+    ]),
+], fluid=True)
+
+@app.callback(
+    Output('live-table', 'data'),
+    Output('error-message', 'children'),
+    Input('refresh', 'n_intervals'),
+    Input('sport-filter', 'value'),
+    Input('profit-slider', 'value'),
+    Input('manual-refresh', 'n_clicks'),
+    Input('bookmaker-filter', 'value'),
+    Input('search-input', 'value'),
+    prevent_initial_call=True
+)
+def update_table(n, sports, min_profit, n_clicks, bookmakers, search):
+    """Busca dados do backend com filtros aplicados"""
+    try:
+        response = requests.post(
+            'http://localhost:5000/api/opportunities',
+            json={'sports': sports, 'min_profit': min_profit, 'bookmakers': bookmakers},
+            timeout=3
+        )
+        filtered_data = response.json()
+        error_msg = ""
+    except Exception as e:
+        error_msg = dbc.Alert(f"Erro ao buscar dados: {e}", color="danger", dismissable=True)
+        filtered_data = []
+    # Filtro de busca local
+    if search:
+        filtered_data = [
+            item for item in filtered_data
+            if search.lower() in item['event'].lower() or search.lower() in item['market'].lower()
+        ]
+    return [{
+        'event': f"🏟️ {item['event']}",
+        'market': item['market'],
+        'profit': f"{item['profit']:.2f}% 🔥" if item['profit'] > 5 else f"{item['profit']:.2f}%",
+        'bookmakers': " vs ".join(item['bookmakers']),
+        'actions': f"[📈 Detalhes](#)"
+    } for item in filtered_data], error_msg
+
+@app.callback(
+    Output("details-modal", "is_open"),
+    Output("modal-body", "children"),
+    Input("live-table", "active_cell"),
+    State("live-table", "data"),
+    Input("close-modal", "n_clicks"),
+    prevent_initial_call=True
+)
+def show_details(active_cell, table_data, close_clicks):
+    ctx = dash.callback_context
+    if ctx.triggered and ctx.triggered[0]['prop_id'].startswith("close-modal"):
+        return False, ""
+    if active_cell and active_cell['column_id'] == 'actions':
+        row = table_data[active_cell['row']]
+        # Exemplo de detalhes, pode ser expandido conforme necessário
+        details = [
+            html.P(f"Evento: {row['event']}"),
+            html.P(f"Mercado: {row['market']}"),
+            html.P(f"Lucro: {row['profit']}"),
+            html.P(f"Casas: {row['bookmakers']}"),
+            html.Hr(),
+            html.P("Mais detalhes podem ser exibidos aqui...")
+        ]
+        return True, details
+    return False, ""
+
+@app.callback(
+    Output("admin-settings", "children"),
+    Input("main-tabs", "value"),
+    prevent_initial_call=True
+)
+def load_admin_settings(tab):
+    if tab != "tab-admin":
+        return ""
+    try:
+        response = requests.get("http://localhost:5000/api/admin/settings")
+        data = response.json()
+        return html.Pre(str(data))
+    except Exception as e:
+        return dbc.Alert(f"Erro ao carregar configurações: {e}", color="danger")
+
+@app.callback(
+    Output("settings-save-status", "children"),
+    Input("save-settings-btn", "n_clicks"),
+    State("admin-settings", "children"),
+    prevent_initial_call=True
+)
+def save_admin_settings(n_clicks, settings_data):
+    if not n_clicks:
+        return ""
+    try:
+        # Aqui você pode adaptar para enviar dados editáveis
+        response = requests.post("http://localhost:5000/api/admin/settings", json={})
+        if response.status_code == 200:
+            return dbc.Alert("Configurações salvas com sucesso!", color="success")
+        return dbc.Alert("Erro ao salvar configurações.", color="danger")
+    except Exception as e:
+        return dbc.Alert(f"Erro: {e}", color="danger")
+
+@app.callback(
+    Output("notification-test-status", "children"),
+    Input("test-notification-btn", "n_clicks"),
+    State("test-notification-msg", "value"),
+    prevent_initial_call=True
+)
+def test_notification(n_clicks, msg):
+    if not n_clicks or not msg:
+        return ""
+    try:
+        response = requests.post("http://localhost:5000/api/admin/test-notification", json={"message": msg})
+        if response.status_code == 200:
+            return dbc.Alert("Notificação enviada!", color="success")
+        return dbc.Alert("Falha ao enviar notificação.", color="danger")
+    except Exception as e:
+        return dbc.Alert(f"Erro: {e}", color="danger")
+
+@app.callback(
+    Output("db-overview", "children"),
+    Input("main-tabs", "value"),
+    prevent_initial_call=True
+)
+def load_db_overview(tab):
+    if tab != "tab-admin":
+        return ""
+    try:
+        response = requests.get("http://localhost:5000/api/admin/db-overview")
+        data = response.json()
+        return html.Pre(str(data))
+    except Exception as e:
+        return dbc.Alert(f"Erro ao carregar dados do banco: {e}", color="danger")
+
+@app.callback(
+    Output('live-games-table', 'data'),
+    Output('upcoming-games-table', 'data'),
+    Input('refresh-games', 'n_intervals'),
+    prevent_initial_call=True
+)
+def update_games_tables(n):
+    try:
+        live_resp = requests.get('http://localhost:5000/api/games/live', timeout=3)
+        upcoming_resp = requests.get('http://localhost:5000/api/games/upcoming', timeout=3)
+        live_games = live_resp.json().get('games', [])
+        upcoming_games = upcoming_resp.json().get('games', [])
+    except Exception as e:
+        live_games = []
+        upcoming_games = []
+    return live_games, upcoming_games
 
 # Callback para automação de sugestões inteligentes (exemplo: autocomplete de evento)
 @app.callback(
@@ -683,7 +1073,7 @@ def update_users_table(_):
     try:
         resp = requests.get('http://localhost:5000/api/admin/users')
         return resp.json().get('users', [])
-    except Exception:
+    except Exception as e:
         return []
 
 @app.callback(
@@ -695,7 +1085,7 @@ def update_bets_table(_):
     try:
         resp = requests.get('http://localhost:5000/api/admin/bets')
         return resp.json().get('bets', [])
-    except Exception:
+    except Exception as e:
         return []
 
 @app.callback(
@@ -707,7 +1097,7 @@ def update_odds_history_table(_):
     try:
         resp = requests.get('http://localhost:5000/api/admin/odds-history')
         return resp.json().get('odds_history', [])
-    except Exception:
+    except Exception as e:
         return []
 
 @app.callback(
@@ -719,5 +1109,5 @@ def update_surebet_logs_table(_):
     try:
         resp = requests.get('http://localhost:5000/api/admin/surebet-logs')
         return resp.json().get('surebet_logs', [])
-    except Exception:
+    except Exception as e:
         return []

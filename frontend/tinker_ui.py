@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 import requests
 import threading
 import locale
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 # Internacionalização básica
 LANGUAGES = {
@@ -96,6 +98,7 @@ class SurebetsApp(tk.Tk):
         self.create_surebets_tab()
         self.create_games_tab()
         self.create_admin_tab()
+        self.create_graphs_tab()
 
     def create_surebets_tab(self):
         frame = ttk.Frame(self.notebook)
@@ -202,7 +205,9 @@ class SurebetsApp(tk.Tk):
                 for g in up:
                     self.up_tree.insert('', 'end', values=(g.get('name'), g.get('status'), g.get('start_time'), g.get('bookmaker')))
             except Exception as e:
-                pass
+                self.live_tree.delete(*self.live_tree.get_children())
+                self.up_tree.delete(*self.up_tree.get_children())
+                self.surebets_status.config(text=f"{L['error']}: {e}")
             self.after(5000, self.update_games_tables)
         threading.Thread(target=fetch, daemon=True).start()
 
@@ -320,6 +325,42 @@ class SurebetsApp(tk.Tk):
                 self.bet_status.config(text=L['error'], fg='red')
         except Exception:
             self.bet_status.config(text=L['error'], fg='red')
+
+    def create_graphs_tab(self):
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text='Gráficos')
+        # Gráfico de evolução de odds
+        odds_label = ttk.Label(frame, text='Evolução das Odds', font=('Arial', 13, 'bold'))
+        odds_label.pack(pady=5)
+        odds_fig, odds_ax = plt.subplots(figsize=(6, 3))
+        try:
+            odds_data = requests.get(f'{API_BASE}/odds-history').json()
+            for event in odds_data:
+                odds_ax.plot(event['timestamps'], event['odds'], marker='o', label=event['event'])
+            odds_ax.set_title('Evolução das Odds')
+            odds_ax.set_xlabel('Tempo')
+            odds_ax.set_ylabel('Odd')
+            odds_ax.legend()
+        except Exception as e:
+            odds_ax.text(0.5, 0.5, f'Erro ao carregar dados: {e}', ha='center')
+        canvas1 = FigureCanvasTkAgg(odds_fig, master=frame)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(pady=10)
+        # Gráfico de distribuição de oportunidades
+        dist_label = ttk.Label(frame, text='Distribuição de Oportunidades', font=('Arial', 13, 'bold'))
+        dist_label.pack(pady=5)
+        dist_fig, dist_ax = plt.subplots(figsize=(6, 3))
+        try:
+            dist_data = requests.get(f'{API_BASE}/opportunity-distribution').json()
+            labels = list(dist_data.keys())
+            sizes = list(dist_data.values())
+            dist_ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+            dist_ax.set_title('Distribuição de Oportunidades por Esporte')
+        except Exception as e:
+            dist_ax.text(0.5, 0.5, f'Erro ao carregar dados: {e}', ha='center')
+        canvas2 = FigureCanvasTkAgg(dist_fig, master=frame)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(pady=10)
 
 if __name__ == '__main__':
     app = SurebetsApp()

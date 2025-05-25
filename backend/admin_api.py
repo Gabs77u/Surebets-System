@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from config import settings
 from backend.notification_system import notify_all
 from backend.database.database import Database
-from backend.games_api import bp as games_api_bp
+from backend.api_integrations.games_api import bp as games_api_bp
 
 app = Flask(__name__)
 app.register_blueprint(games_api_bp)
@@ -26,7 +26,8 @@ LANGUAGES = {
 }
 
 def get_lang():
-    return request.headers.get('Accept-Language', 'pt')[:2]
+    lang = request.headers.get('Accept-Language', 'pt')
+    return lang[:2] if lang else 'pt'
 
 @app.route('/api/admin/settings', methods=['GET', 'POST'])
 def admin_settings():
@@ -86,8 +87,8 @@ def admin_insert_bet():
     for field in required:
         if not data.get(field):
             return jsonify({'error': f"{LANGUAGES[get_lang()]['missing_field']}: {field}"}), 400
+    db = Database()
     try:
-        db = Database()
         # Inserção de evento (ou busca se já existe)
         event_name = data["event"]
         market = data["market"]
@@ -110,10 +111,11 @@ def admin_insert_bet():
             VALUES (floor(extract(epoch from now())*1000), %s, %s, %s, %s, now())
             ON CONFLICT (id) DO NOTHING
         """, (event_id, selection, odd, bookmaker))
-        db.close()
         return jsonify({'status': LANGUAGES[get_lang()]['bet_inserted']}), 200
     except Exception as e:
         return jsonify({'error': f"{LANGUAGES[get_lang()]['error']}: {str(e)}"}), 500
+    finally:
+        db.close()
 
 @app.route('/api/admin/suggestions', methods=['GET'])
 def admin_suggestions():
@@ -190,6 +192,42 @@ def get_surebet_logs():
         return jsonify({'surebet_logs': logs})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/odds-history', methods=['GET'])
+def api_odds_history():
+    try:
+        db = Database()
+        # Exemplo: odds históricas por evento
+        rows = db.fetch("""
+            SELECT e.name as event, array_agg(oh.changed_at ORDER BY oh.changed_at) as timestamps, array_agg(oh.new_odds ORDER BY oh.changed_at) as odds
+            FROM odds_history oh
+            JOIN selections s ON oh.selection_id = s.id
+            JOIN events e ON s.event_id = e.id
+            GROUP BY e.name
+            ORDER BY e.name
+        """)
+        db.close()
+        # Formato: [{event, timestamps, odds}]
+        return jsonify([{'event': r['event'], 'timestamps': r['timestamps'], 'odds': r['odds']} for r in rows])
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/api/opportunity-distribution', methods=['GET'])
+def api_opportunity_distribution():
+    try:
+        db = Database()
+        # Exemplo: distribuição de oportunidades por esporte
+        rows = db.fetch("""
+            SELECT e.sport, COUNT(*) as total
+            FROM events e
+            JOIN selections s ON s.event_id = e.id
+            GROUP BY e.sport
+        """)
+        db.close()
+        # Formato: {sport: total, ...}
+        return jsonify({r['sport']: r['total'] for r in rows})
+    except Exception as e:
+        return jsonify({})
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

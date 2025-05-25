@@ -164,7 +164,6 @@ python -m pip install --upgrade pip setuptools
 - Clique com o botão direito e escolha **"Extrair tudo..."**.
 - Salve em uma pasta fácil, como **Área de Trabalho**.
 
-> 🖼️ **Sugestão de print:** Mostre a pasta extraída na Área de Trabalho.
 
 ---
 
@@ -179,7 +178,6 @@ build\reparo_python_env.cmd
 - Aguarde até aparecer "Ambiente reparado com sucesso" ou "All requirements satisfied".
 
 > ⚠️ **Se aparecer erro de permissão,** feche o terminal e abra como administrador.
-> 🖼️ **Sugestão de print:** Tela do terminal rodando o script e mostrando as mensagens de sucesso.
 
 ---
 
@@ -194,8 +192,6 @@ build\build_windows.cmd
 - O script detecta o Python correto e executa o PyInstaller automaticamente.
 - Ao final, aparecerá uma mensagem de sucesso e o arquivo `SurebetsSystem.exe` será criado na sua **Área de Trabalho**.
 
-> 🖼️ **Sugestão de print:** Mostre o arquivo `SurebetsSystem.exe` na Área de Trabalho.
-
 ---
 
 ### 🟢 6. Execute o sistema
@@ -207,8 +203,6 @@ build\build_windows.cmd
 - Aguarde alguns segundos. O sistema abrirá dois painéis:
   - Painel Dash: http://localhost:8050
   - Painel Admin: http://localhost:5000
-
-> 🖼️ **Sugestão de print:** Mostre o navegador aberto nos painéis Dash/Admin.
 
 ---
 
@@ -222,15 +216,6 @@ build\build_windows.cmd
 
 ---
 
-> 🟩 **Resumo visual do processo:**
-> 1. ![Ícone Python](docs/img/icon_python.png) Instale o Python
-> 2. ![Ícone Terminal](docs/img/icon_terminal.png) Atualize pip/setuptools
-> 3. ![Ícone Pasta](docs/img/icon_folder.png) Extraia o projeto
-> 4. ![Ícone Ferramenta](docs/img/icon_tools.png) Repare o ambiente
-> 5. ![Ícone Build](docs/img/icon_build.png) Gere o executável
-> 6. ![Ícone Executar](docs/img/icon_run.png) Execute o sistema
->
-> **Dica:** Você pode adicionar prints reais nas pastas `docs/img/` e substituir os exemplos acima para deixar o guia ainda mais visual!
 
 ---
 
@@ -248,8 +233,6 @@ build\build_windows.cmd
   - Click **Install Now**.
 
 > 💡 **Tip:** If the screen below appears, check the box highlighted in red before installing!
-
-![Example of Python installation with "Add to PATH"](docs/img/python_add_to_path.png)
 
 ---
 
@@ -274,7 +257,6 @@ python -m pip install --upgrade pip setuptools
 - Right-click and choose **"Extract all..."**.
 - Save it in an easy folder, like **Desktop**.
 
-> 🖼️ **Print suggestion:** Show the extracted folder on the Desktop.
 
 ---
 
@@ -289,7 +271,6 @@ build\reparo_python_env.cmd
 - Wait until "Ambiente reparado com sucesso" or "All requirements satisfied" appears.
 
 > ⚠️ **If a permission error appears,** close the terminal and open as administrator.
-> 🖼️ **Print suggestion:** Terminal screen running the script and showing success messages.
 
 ---
 
@@ -304,7 +285,6 @@ build\build_windows.cmd
 - The script detects the correct Python and runs PyInstaller automatically.
 - At the end, a success message will appear and the file `SurebetsSystem.exe` will be created on your **Desktop**.
 
-> 🖼️ **Print suggestion:** Show the file `SurebetsSystem.exe` on the Desktop.
 
 ---
 
@@ -318,7 +298,6 @@ build\build_windows.cmd
   - Dash Panel: http://localhost:8050
   - Admin Panel: http://localhost:5000
 
-> 🖼️ **Print suggestion:** Show the browser open on Dash/Admin panels.
 
 ---
 
@@ -332,17 +311,6 @@ build\build_windows.cmd
 
 ---
 
-> 🟩 **Visual summary of the process:**
-> 1. ![Python Icon](docs/img/icon_python.png) Install Python
-> 2. ![Terminal Icon](docs/img/icon_terminal.png) Update pip/setuptools
-> 3. ![Folder Icon](docs/img/icon_folder.png) Extract the project
-> 4. ![Tools Icon](docs/img/icon_tools.png) Repair the environment
-> 5. ![Build Icon](docs/img/icon_build.png) Generate the executable
-> 6. ![Run Icon](docs/img/icon_run.png) Run the system
->
-> **Tip:** You can add real prints in the `docs/img/` folder and replace the examples above to make the guide even more visual!
-
----
 
 #### Passo a passo detalhado para usuários leigos (Linux)
 
@@ -402,9 +370,7 @@ unzip Surebets-System-main.zip
 cd Surebets-System
 ```
 
-> 🖼️ **Sugestão de print:** Mostre a pasta aberta no gerenciador de arquivos.
 
----
 
 ### 🟢 4. Repare o ambiente Python (caso tenha erros de dependências)
 
@@ -422,9 +388,8 @@ bash build/reparo_python_env.sh
 > chmod +x build/reparo_python_env.sh
 > ./build/reparo_python_env.sh
 > ```
-> 🖼️ **Sugestão de print:** Tela do terminal rodando o script e mostrando as mensagens de sucesso.
 
----
+
 
 ### 🟢 5. Gere o executável standalone
 
@@ -437,7 +402,6 @@ bash build/build_linux.sh
 - O script detecta o Python correto e executa o PyInstaller automaticamente.
 - Ao final, aparecerá uma mensagem de sucesso e o arquivo executável será criado na sua pasta **Área de Trabalho** (Desktop) ou na pasta do projeto.
 
-> 🖼️ **Sugestão de print:** Mostre o arquivo executável na Área de Trabalho ou na pasta do projeto.
 
 ---
 
@@ -460,7 +424,6 @@ chmod +x SurebetsSystem
   - Painel Dash: http://localhost:8050
   - Painel Admin: http://localhost:5000
 
-> 🖼️ **Sugestão de print:** Mostre o navegador aberto nos painéis Dash/Admin.
 
 ---
 
@@ -472,17 +435,7 @@ chmod +x SurebetsSystem
 - 🔑 **Precisa de senha admin?** Veja em `config/settings.py` ou pergunte ao responsável.
 - 🆘 **Suporte:** Envie e-mail para gabrielaraujoseven@gmail.com ou abra uma issue no GitHub.
 
----
 
-> 🟩 **Resumo visual do processo:**
-> 1. ![Ícone Python](docs/img/icon_python.png) Instale o Python
-> 2. ![Ícone Terminal](docs/img/icon_terminal.png) Atualize pip/setuptools
-> 3. ![Ícone Pasta](docs/img/icon_folder.png) Extraia o projeto
-> 4. ![Ícone Ferramenta](docs/img/icon_tools.png) Repare o ambiente
-> 5. ![Ícone Build](docs/img/icon_build.png) Gere o executável
-> 6. ![Ícone Executar](docs/img/icon_run.png) Execute o sistema
-
-> **Dica:** Você pode adicionar prints reais nas pastas `docs/img/` e substituir os exemplos acima para deixar o guia ainda mais visual!
 
 ---
 
@@ -544,9 +497,6 @@ unzip Surebets-System-main.zip
 cd Surebets-System
 ```
 
-> 🖼️ **Print suggestion:** Show the folder open in the file manager.
-
----
 
 ### 🟢 4. Repair the Python environment (if you have dependency errors)
 
@@ -564,9 +514,7 @@ bash build/reparo_python_env.sh
 > chmod +x build/reparo_python_env.sh
 > ./build/reparo_python_env.sh
 > ```
-> 🖼️ **Print suggestion:** Terminal screen running the script and showing success messages.
 
----
 
 ### 🟢 5. Generate the standalone executable
 
@@ -578,8 +526,6 @@ bash build/build_linux.sh
 
 - The script detects the correct Python and runs PyInstaller automatically.
 - At the end, a success message will appear and the executable file will be created on your **Desktop** or in the project folder.
-
-> 🖼️ **Print suggestion:** Show the executable file on the Desktop or in the project folder.
 
 ---
 
@@ -602,8 +548,6 @@ chmod +x SurebetsSystem
   - Dash Panel: http://localhost:8050
   - Admin Panel: http://localhost:5000
 
-> 🖼️ **Print suggestion:** Show the browser open on Dash/Admin panels.
-
 ---
 
 ### 🟢 7. Quick tips and common problems
@@ -614,17 +558,6 @@ chmod +x SurebetsSystem
 - 🔑 **Need admin password?** Check in `config/settings.py` or ask the responsible person.
 - 🆘 **Support:** Email gabrielaraujoseven@gmail.com or open an issue on GitHub.
 
----
-
-> 🟩 **Visual summary of the process:**
-> 1. ![Python Icon](docs/img/icon_python.png) Install Python
-> 2. ![Terminal Icon](docs/img/icon_terminal.png) Update pip/setuptools
-> 3. ![Folder Icon](docs/img/icon_folder.png) Extract the project
-> 4. ![Tools Icon](docs/img/icon_tools.png) Repair the environment
-> 5. ![Build Icon](docs/img/icon_build.png) Generate the executable
-> 6. ![Run Icon](docs/img/icon_run.png) Run the system
-
-> **Tip:** You can add real prints in the `docs/img/` folder and replace the examples above to make the guide even more visual!
 
 ---
 
@@ -666,7 +599,7 @@ Surebets-System/
 ├── config/                   # 🇧🇷 Configurações e segurança | 🇺🇸 Settings and security
 ├── frontend/                 # 🇧🇷 (Opcional) arquivos estáticos/templates | 🇺🇸 (Optional) static/templates
 ├── tests/                    # 🇧🇷 Testes unitários | 🇺🇸 Unit tests
-├── main.py                   # 🇧🇷 Ponto de entrada unificado | 🇺🇸 Unified entry point
+├── src                       # 🇧🇷 Ponto de entrada unificado | 🇺🇸 Source Code Unified
 ├── requirements.txt          # 🇧🇷 Dependências Python | 🇺🇸 Python dependencies
 ├── Dockerfile                # 🇧🇷 Build Docker | 🇺🇸 Docker build
 ├── docker-compose.yml        # 🇧🇷 Orquestração Docker | 🇺🇸 Docker orchestration
@@ -725,5 +658,5 @@ pytest tests/
 
 ## 🇧🇷 Contato | 🇺🇸 Contact
 
-🇧🇷 Dúvidas, sugestões ou bugs? Abra uma issue ou envie um e-mail para gabrielaraujo.dev@gmail.com
-🇺🇸 Questions, suggestions or bugs? Open an issue or email gabrielaraujo.dev@gmail.com
+🇧🇷 Dúvidas, sugestões ou bugs? Abra uma issue ou envie um e-mail para gabrielaraujoseven@gmail.com
+🇺🇸 Questions, suggestions or bugs? Open an issue or email gabrielaraujoseven@gmaail.com

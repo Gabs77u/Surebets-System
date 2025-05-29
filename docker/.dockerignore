@@ -1,0 +1,395 @@
+# 🚫 Docker Ignore - Sistema de Surebets
+# Arquivos e diretórios ignorados durante o build Docker
+
+# =============================================================================
+# GIT E CONTROLE DE VERSÃO
+# =============================================================================
+.git
+.gitignore
+.gitattributes
+.github
+
+# =============================================================================
+# DOCUMENTAÇÃO
+# =============================================================================
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+docs/
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# =============================================================================
+# NODE.JS (se aplicável)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# =============================================================================
+# EDITORES E IDEs
+# =============================================================================
+# Visual Studio Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# SISTEMA OPERACIONAL
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# ARQUIVOS TEMPORÁRIOS E LOGS
+# =============================================================================
+# Logs
+logs/
+*.log
+log/
+
+# Arquivos temporários
+tmp/
+temp/
+.tmp
+.temp
+
+# Backups
+backup/
+backups/
+*.bak
+*.backup
+
+# =============================================================================
+# DADOS E CACHE
+# =============================================================================
+# Bancos de dados locais
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+cache/
+.cache/
+*.cache
+
+# Data files
+data/
+*.csv
+*.json
+*.xml
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# =============================================================================
+# DESENVOLVIMENTO E TESTES
+# =============================================================================
+# Arquivos de teste
+test/
+tests/
+*_test.py
+test_*.py
+
+# Scripts de desenvolvimento
+scripts/
+tools/
+utils/
+
+# Configurações locais
+config/local/
+.env.local
+.env.development
+.env.test
+
+# =============================================================================
+# BUILD E DEPLOY
+# =============================================================================
+# Build artifacts
+build/
+dist/
+target/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+.jenkins/
+
+# Kubernetes
+k8s/
+kubernetes/
+*.yaml
+*.yml
+
+# Terraform
+*.tf
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# =============================================================================
+# CERTIFICADOS E CHAVES
+# =============================================================================
+# SSL/TLS
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# SSH
+*.pub
+*.rsa
+id_*
+
+# =============================================================================
+# ARQUIVOS ESPECÍFICOS DO PROJETO
+# =============================================================================
+# Migrações antigas
+migrations/
+migration_scripts/
+
+# Arquivos de exemplo/template
+*.example
+*.template
+*.sample
+
+# Configurações específicas
+settings.local.py
+config.local.py
+
+# Arquivos de análise
+analysis/
+reports/
+benchmarks/
+
+# =============================================================================
+# ARQUIVOS GRANDES E MEDIA
+# =============================================================================
+# Imagens
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.ico
+
+# Vídeos
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+
+# Áudio
+*.mp3
+*.wav
+*.ogg
+*.flac
+
+# Arquivos compactados
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# =============================================================================
+# MONITORAMENTO E OBSERVABILIDADE
+# =============================================================================
+# Prometheus
+prometheus/
+metrics/
+
+# Grafana
+grafana/
+
+# Logs estruturados
+*.jsonl
+*.ndjson

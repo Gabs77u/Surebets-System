@@ -5,35 +5,79 @@ from pathlib import Path
 
 # Caminhos relativos robustos
 BASE_DIR = Path(__file__).parent.resolve()
-BACKEND_DIR = BASE_DIR / "backend"
+BACKEND_DIR = BASE_DIR.parent / "backend"
 DB_SCHEMA = BACKEND_DIR / "database" / "schema.sql"
 
-DASH_PATH = str(BACKEND_DIR / "app.py")
-ADMIN_API_PATH = str(BACKEND_DIR / "admin_api.py")
+# Usando os módulos unificados
+DASH_PATH = str(BACKEND_DIR / "apps" / "dashboard.py")
+ADMIN_API_PATH = str(BACKEND_DIR / "apps" / "admin_api.py")
+
+processes = []
+
+import subprocess
+import sys
+import os
+from pathlib import Path
+
+# Caminhos relativos robustos
+BASE_DIR = Path(__file__).parent.resolve()
+BACKEND_DIR = BASE_DIR.parent / "backend"
+DB_SCHEMA = BACKEND_DIR / "database" / "schema.sql"
+DB_POPULATE = BACKEND_DIR / "database" / "populate.sql"
+
+# Usando os módulos unificados
+DASH_PATH = str(BACKEND_DIR / "apps" / "dashboard.py")
+ADMIN_API_PATH = str(BACKEND_DIR / "apps" / "admin_api.py")
 
 processes = []
 
 def init_database():
-    import psycopg2
+    """Inicializa o banco de dados SQLite com schema e dados"""
+    import sqlite3
     import time
-    from config import settings
-    print("Aguardando banco de dados PostgreSQL...")
-    for _ in range(30):
-        try:
-            conn = psycopg2.connect(settings.POSTGRES_URL)
-            cur = conn.cursor()
-            with open(DB_SCHEMA, "r", encoding="utf-8") as f:
-                cur.execute(f.read())
-            conn.commit()
-            cur.close()
-            conn.close()
-            print("Banco de dados inicializado!")
+    
+    print("Inicializando banco de dados SQLite...")
+    
+    try:
+        # Importa e inicializa o banco usando nossa nova classe
+        sys.path.append(str(BACKEND_DIR))
+        from database.database import DatabaseManager
+        
+        db = DatabaseManager()
+        
+        # Verifica se o banco já existe e tem dados
+        result = db.fetch_one("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'")
+        if result and result['count'] > 0:
+            print("Banco de dados já existe e está configurado.")
             return
-        except Exception as e:
-            print("Aguardando DB...", e)
-            time.sleep(2)
-    print("Não foi possível conectar ao banco de dados.")
-    sys.exit(1)
+        
+        # Executa o schema
+        print("Criando estrutura do banco...")
+        with open(DB_SCHEMA, "r", encoding="utf-8") as f:
+            schema_sql = f.read()
+            # SQLite não suporta múltiplas queries em uma execução, então vamos dividir
+            for statement in schema_sql.split(';'):
+                statement = statement.strip()
+                if statement:
+                    db.execute(statement)
+        
+        # Popula com dados iniciais
+        if DB_POPULATE.exists():
+            print("Populando banco com dados iniciais...")
+            with open(DB_POPULATE, "r", encoding="utf-8") as f:
+                populate_sql = f.read()
+                for statement in populate_sql.split(';'):
+                    statement = statement.strip()
+                    if statement:
+                        db.execute(statement)
+        
+        print("Banco de dados SQLite inicializado com sucesso!")
+        
+    except Exception as e:
+        print(f"Erro ao inicializar banco de dados: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 def run_dash():
     env = os.environ.copy()
@@ -62,13 +106,13 @@ def run_tkinter_frontend():
     return subprocess.Popen([sys.executable, str(frontend_path)], env=env)
 
 if __name__ == "__main__":
-    print("Iniciando Surebets System...")
+    print("Iniciando Surebets System (Versão Unificada)...")
     print("Se o antivírus acusar falso positivo, adicione uma exceção para este executável.")
     init_database()
     processes.append(run_dash())
     processes.append(run_admin_api())
-    print("Painel Dash: http://localhost:8050")
-    print("Painel Admin: http://localhost:5000")
+    print("Dashboard Unificado: http://localhost:8050")
+    print("Admin API Unificada: http://localhost:5000")
 
     # Aguarda os serviços responderem
     print("Aguardando backend Dash...")

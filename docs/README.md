@@ -183,8 +183,8 @@ python -m backend.apps.admin_api
 
 ### 📚 Documentos Principais
 
-- **[Documentação Completa](docs/DESENVOLVIMENTO_COMPLETO.md)**: Guia completo de desenvolvimento
-- **[Roadmap de Produção](docs/PRODUCTION_ROADMAP.md)**: Plano detalhado para produção
+- **[Documentação Completa](DESENVOLVIMENTO_COMPLETO.md)**: Guia completo de desenvolvimento
+- **[Roadmap de Produção](PRODUCTION_ROADMAP.md)**: Plano detalhado para produção
 - **[API Documentation](docs/API.md)**: Especificação das APIs
 - **[Deployment Guide](docs/DEPLOYMENT.md)**: Guia de deploy
 

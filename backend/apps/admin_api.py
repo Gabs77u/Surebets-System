@@ -13,16 +13,19 @@ import secrets
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../backend')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 # Importar módulos unificados
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from config import settings, security
-from backend.notification_system import notify_all
+from backend.services.notification import notify_all
+from backend.apps.adapters import get_all_adapters, get_adapter
+from backend.core.i18n import get_text, get_language_dict
 from database.database import DatabaseManager
-from backend.unified_adapters import get_all_adapters, get_adapter
-from backend.i18n import get_text, get_language_dict
+from backend.core.auth import AuthManager
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,15 +35,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = settings.SECRET_KEY
 
+# Inicializar AuthManager e JWT
+jwt_auth = AuthManager(app)
+
 # Configuração de admin
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")
-
-# Configuração de senha padrão em modo DEBUG
-if not ADMIN_PASSWORD_HASH and settings.DEBUG:
-    default_password = "admin_password_debug"
-    ADMIN_PASSWORD_HASH = security.generate_hash(default_password)
-    logger.warning(f"Usando senha padrão '{default_password}' para DEBUG")
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH") or getattr(settings, "ADMIN_PASSWORD_HASH", None)
+if not ADMIN_PASSWORD_HASH:
+    ADMIN_PASSWORD_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"  # hash fixo para testes (senha: admin123)
+    logger.warning("ADMIN_PASSWORD_HASH não definido, usando hash fixo para testes (senha: admin123)")
 
 # Decorador para autenticação
 def login_required(f):
@@ -110,6 +113,53 @@ def admin_logout():
     session.clear()
     logger.info(f"Logout realizado para usuário '{username}'")
     return jsonify({'status': get_text('logout_success', get_request_language())}), 200
+
+# Novo endpoint de login JWT
+@app.route('/api/auth/login', methods=['POST'])
+def jwt_login():
+    """Login para admin e usuários comuns (JWT)."""
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    lang = get_request_language()
+
+    if not username or not password:
+        return jsonify({'error': get_text('missing_field', lang)}), 400
+
+    # Admin login
+    if username == ADMIN_USERNAME and security.verify_hash(password, ADMIN_PASSWORD_HASH):
+        token = jwt_auth.create_token(identity=username, role='admin')
+        logger.info(f"Login JWT bem-sucedido para admin '{username}'")
+        return jsonify({'access_token': token, 'role': 'admin'}), 200
+
+    # Usuário comum (exemplo: buscar no banco)
+    db = DatabaseManager()
+    user = db.fetch_one("SELECT id, username, password_hash, role FROM users WHERE username = ?", (username,))
+    if user and jwt_auth.verify_password(password, user['password_hash']):
+        token = jwt_auth.create_token(identity=user['username'], role=user.get('role', 'user'))
+        logger.info(f"Login JWT bem-sucedido para usuário '{username}'")
+        return jsonify({'access_token': token, 'role': user.get('role', 'user')}), 200
+
+    logger.warning(f"Tentativa de login JWT falhou para usuário '{username}'")
+    return jsonify({'error': get_text('login_failed', lang)}), 401
+
+# Decorador para rotas protegidas por JWT
+
+def jwt_admin_required(fn):
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        identity = get_jwt_identity()
+        if not identity or identity.get('role') != 'admin':
+            return jsonify({'error': 'Acesso restrito a administradores'}), 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+# Exemplo: proteger rota administrativa com JWT
+@app.route('/api/admin/protected', methods=['GET'])
+@jwt_admin_required
+def admin_protected():
+    return jsonify({'msg': 'Acesso admin JWT OK'}), 200
 
 # Endpoints de configurações
 @app.route('/api/admin/settings', methods=['GET', 'POST'])

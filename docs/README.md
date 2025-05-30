@@ -9,16 +9,64 @@
 
 ## 📋 Índice
 
-- [🎯 Visão Geral](#-visão-geral)
-- [✨ Funcionalidades](#-funcionalidades)
-- [🏗️ Arquitetura](#-arquitetura)
-- [🚀 Quick Start](#-quick-start)
-- [🛠️ Instalação](#-instalação)
-- [📖 Documentação](#-documentação)
-- [🔧 Configuração](#-configuração)
-- [🧪 Testes](#-testes)
-- [🚀 Deploy](#-deploy)
-- [🤝 Contribuição](#-contribuição)
+- [Principais Alterações](#-principais-alterações-recentes)
+- [Visão Geral](#-visão-geral)
+- [Funcionalidades](#-funcionalidades)
+- [Arquitetura](#-arquitetura)
+- [Como Iniciar](#-como-iniciar-a-aplicação)
+- [Configuração](#-configuração)
+- [Testes](#-testes)
+- [Deploy](#-deploy)
+- [Documentação](#-documentação)
+- [Contribuição](#-contribuição)
+- [Status do Projeto](#-status-do-projeto)
+- [Suporte](#-suporte)
+- [Licença](#-licença)
+
+---
+
+## 🆕 Principais Alterações Recentes
+
+- **Arquitetura Modular Unificada:**
+  - Apps principais em `backend/apps/` (dashboard, admin_api, adapters)
+  - Utilitários centrais em `backend/core/` (i18n, segurança)
+  - Serviços de negócio em `backend/services/`
+  - Banco de dados em `backend/database/` (agora usando SQLite)
+  - Interface desktop Tkinter em `frontend/tinker_ui.py`
+  - Configurações centralizadas em `config/settings.py`
+  - Docker e scripts de automação em `docker/`
+  - Ponto de entrada e dependências em `src/`
+
+- **Unificação e Refatoração:**
+  - Dashboard web consolidado e profissional
+  - API administrativa unificada e protegida
+  - Sistema de adaptadores extensível para múltiplas casas de apostas
+  - Internacionalização centralizada (PT-BR/EN)
+  - Imports atualizados para refletir a nova estrutura
+
+- **Limpeza e Remoção de Redundâncias:**
+  - Removidos dashboards, adaptadores e APIs duplicados
+  - Eliminação de scripts de migração, backups e artefatos antigos
+  - Diretórios de teste desnecessários e código legado removidos
+
+- **Testes e Qualidade:**
+  - Testes unitários, integração e performance automatizados
+  - Fixtures e benchmarking integrados
+  - Cobertura de código ampliada
+
+- **Configuração e Ambiente:**
+  - Uso de SQLite por padrão (configurável)
+  - Variáveis de ambiente organizadas
+  - Dependências atualizadas em `requirements.txt`
+
+- **Roadmap e Próximos Passos:**
+  - Implementação de autenticação JWT
+  - Substituição de prints por logging profissional
+  - Configuração de cache Redis
+  - Pipeline CI/CD e deploy automatizado
+  - Monitoramento e health checks
+
+---
 
 ## 🎯 Visão Geral
 
@@ -91,109 +139,58 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 - **Observer Pattern**: Sistema de notificações e eventos
 - **Strategy Pattern**: Algoritmos de arbitragem intercambiáveis
 
-## 🚀 Quick Start
+## 🚀 Como Iniciar a Aplicação
 
-### ⚡ Execução Rápida com Docker
+### 🐳 Execução Recomendada com Docker Compose
 
 ```bash
 # Clone o repositório
 git clone https://github.com/Gabs77u/Surebets-System.git
-cd surebets-system
+cd Surebets-System
 
-# Execute com Docker Compose
-docker-compose up -d
+# Suba todos os serviços (backend, frontend, banco, redis, etc)
+docker-compose -f docker/docker-compose.yml up -d
 
-# Acesse a aplicação
-# Dashboard: http://localhost:5000
-# Admin API: http://localhost:5001
+# Para visualizar os logs em tempo real:
+docker-compose -f docker/docker-compose.yml logs -f
+
+# Para parar e remover os containers:
+docker-compose -f docker/docker-compose.yml down
+
+# Para reiniciar após alterações:
+docker-compose -f docker/docker-compose.yml restart
+
+# Para acessar o banco SQLite manualmente:
+docker exec -it <nome_do_container_backend> sqlite3 /app/data/surebets.db
+
+# Para rodar migrações ou scripts utilitários:
+docker-compose -f docker/docker-compose.yml exec backend python backend/migrate_to_sqlite.py
+
+# Dica: Para ambiente de produção, utilize o arquivo docker-compose.prod.yml e configure as variáveis de ambiente adequadas.
 ```
 
-### 🐍 Execução Local
+### 🐍 Execução Local (Desenvolvimento)
 
 ```bash
-# Instale as dependências
+# 1. Crie e ative um ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate    # Windows
+
+# 2. Instale as dependências
 pip install -r src/requirements.txt
 
-# Execute o sistema
+# 3. Configure as variáveis de ambiente (opcional)
+cp config/settings.example.py config/settings.py
+# Edite config/settings.py conforme necessário
+
+# 4. Execute o sistema principal
 python src/main.py
 
 # Ou execute módulos específicos
 python -m backend.apps.dashboard
 python -m backend.apps.admin_api
 ```
-
-## 🛠️ Instalação
-
-### 📋 Pré-requisitos
-
-- **Python**: 3.9 ou superior
-- **Docker**: 20.0+ (opcional, recomendado)
-- **Redis**: 6.0+ (para cache em produção)
-- **PostgreSQL**: 13+ (para produção)
-
-### 🔧 Instalação Local
-
-1. **Clone o Repositório**
-   ```bash
-   git clone https://github.com/Gabs77u/Surebets-System.git
-   cd surebets-system
-   ```
-
-2. **Ambiente Virtual**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # ou
-   venv\Scripts\activate     # Windows
-   ```
-
-3. **Instalar Dependências**
-   ```bash
-   pip install -r src/requirements.txt
-   ```
-
-4. **Configurar Ambiente**
-   ```bash
-   cp config/settings.example.py config/settings.py
-   # Edite config/settings.py conforme necessário
-   ```
-
-5. **Executar**
-   ```bash
-   python src/main.py
-   ```
-
-### 🐳 Instalação com Docker
-
-1. **Docker Compose (Recomendado)**
-   ```bash
-   docker-compose -f docker/docker-compose.yml up -d
-   ```
-
-2. **Docker Manual**
-   ```bash
-   # Build da imagem
-   docker build -t surebets-system .
-   
-   # Execute o container
-   docker run -p 5000:5000 -p 5001:5001 surebets-system
-   ```
-
-## 📖 Documentação
-
-### 📚 Documentos Principais
-
-- **[Documentação Completa](DESENVOLVIMENTO_COMPLETO.md)**: Guia completo de desenvolvimento
-- **[Roadmap de Produção](PRODUCTION_ROADMAP.md)**: Plano detalhado para produção
-- **[API Documentation](docs/API.md)**: Especificação das APIs
-- **[Deployment Guide](docs/DEPLOYMENT.md)**: Guia de deploy
-
-### 🎓 Guias Específicos
-
-- **[Architecture Guide](docs/ARCHITECTURE.md)**: Detalhes da arquitetura
-- **[Contributing Guidelines](docs/CONTRIBUTING.md)**: Como contribuir
-- **[Security Guide](docs/SECURITY.md)**: Práticas de segurança
-- **[Performance Guide](docs/PERFORMANCE.md)**: Otimizações de performance
 
 ## 🔧 Configuração
 
@@ -291,6 +288,17 @@ curl http://localhost:5000/health
 - **Logs**: Centralizados via ELK stack
 - **Alertas**: PagerDuty/Slack integration
 
+## 📖 Documentação
+
+- **[Documentação Completa](DESENVOLVIMENTO_COMPLETO.md)**
+- **[Roadmap de Produção](PRODUCTION_ROADMAP.md)**
+- **[API Documentation](API.md)**
+- **[Deployment Guide](DEPLOYMENT.md)**
+- **[Architecture Guide](ARCHITECTURE.md)**
+- **[Contributing Guidelines](CONTRIBUTING.md)**
+- **[Security Guide](SECURITY.md)**
+- **[Performance Guide](PERFORMANCE.md)**
+
 ## 🤝 Contribuição
 
 ### 🛠️ Como Contribuir
@@ -319,27 +327,28 @@ curl http://localhost:5000/health
 
 ### ✅ Funcionalidades Implementadas
 
-- [x] **Arquitetura Unificada**: Sistema modular e profissional
-- [x] **Dashboard Web**: Interface completa com Flask
-- [x] **API Administrativa**: Endpoints de gerenciamento
-- [x] **Sistema de Adaptadores**: Suporte a múltiplas casas de apostas
-- [x] **Internacionalização**: Suporte PT-BR e EN
-- [x] **Interface Desktop**: Aplicação Tkinter
+- [x] **Arquitetura Modular Unificada**: Apps, core, services, database, frontend, config, docker, src
+- [x] **Dashboard Web Consolidado**: Interface Flask profissional
+- [x] **API Administrativa Unificada**: Endpoints protegidos e gerenciamento
+- [x] **Sistema de Adaptadores Extensível**: Suporte a múltiplas casas de apostas
+- [x] **Internacionalização Centralizada**: PT-BR e EN
+- [x] **Interface Desktop Tkinter**: Integração com backend
+- [x] **Testes Automatizados**: Unitários, integração, performance
+- [x] **Configuração Centralizada**: settings.py e variáveis de ambiente
 
 ### 🚧 Em Desenvolvimento
 
-- [ ] **Autenticação JWT**: Sistema de autenticação robusto
+- [ ] **Autenticação JWT**: Sistema robusto de autenticação
 - [ ] **Cache Redis**: Layer de cache para performance
-- [ ] **Monitoring**: Métricas e alertas profissionais
+- [ ] **Logging Profissional**: Substituição de prints por logs estruturados
+- [ ] **Monitoring e Health Checks**: Métricas e alertas profissionais
 - [ ] **CI/CD Pipeline**: Deploy automatizado
-- [ ] **Testes Automatizados**: Suite completa de testes
 
 ### 🎯 Roadmap
 
-1. **Q1 2025**: Implementação de segurança e autenticação
-2. **Q2 2025**: Sistema de monitoring e observabilidade
-3. **Q3 2025**: Otimizações de performance e cache
-4. **Q4 2025**: Deploy automatizado e CI/CD
+1. **Q2 2025**: Sistema de monitoring, logging e observabilidade
+2. **Q3 2025**: Otimizações de performance, cache Redis, retry logic
+3. **Q4 2025**: Deploy automatizado, CI/CD, backup e disaster recovery
 
 ## 📞 Suporte
 

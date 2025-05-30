@@ -1,4 +1,4 @@
-# Core dependencies
+# pip# Core dependencies (comentado para evitar erro de requirements)
 requests==2.31.0
 pandas==2.1.4
 numpy==1.26.4
@@ -11,6 +11,8 @@ dash-bootstrap-components==1.5.0
 plotly==5.18.0
 matplotlib==3.8.4
 fastapi==0.110.0
+flask-jwt-extended
+werkzeug
 
 # Database (SQLite - built into Python)
 # No additional dependencies needed for SQLite

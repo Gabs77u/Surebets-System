@@ -22,11 +22,11 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Adicionar o diretório raiz ao sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 # Importar módulos unificados
-from backend.i18n import get_text, get_language_dict, I18n, DEFAULT_LANGUAGE
-from backend.unified_adapters import get_all_adapters, get_bookmaker_names
+from backend.core.i18n import get_text, get_language_dict, I18n, DEFAULT_LANGUAGE
+from backend.apps.adapters import get_all_adapters, get_bookmaker_names
 from config import settings
 
 # Configuração de logging

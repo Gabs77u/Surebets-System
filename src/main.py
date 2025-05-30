@@ -1,22 +1,8 @@
-import subprocess
 import sys
 import os
-from pathlib import Path
-
-# Caminhos relativos robustos
-BASE_DIR = Path(__file__).parent.resolve()
-BACKEND_DIR = BASE_DIR.parent / "backend"
-DB_SCHEMA = BACKEND_DIR / "database" / "schema.sql"
-
-# Usando os módulos unificados
-DASH_PATH = str(BACKEND_DIR / "apps" / "dashboard.py")
-ADMIN_API_PATH = str(BACKEND_DIR / "apps" / "admin_api.py")
-
-processes = []
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 
 import subprocess
-import sys
-import os
 from pathlib import Path
 
 # Caminhos relativos robustos
@@ -41,7 +27,7 @@ def init_database():
     try:
         # Importa e inicializa o banco usando nossa nova classe
         sys.path.append(str(BACKEND_DIR))
-        from database.database import DatabaseManager
+        from backend.database.database import DatabaseManager
         
         db = DatabaseManager()
         

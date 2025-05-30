@@ -117,6 +117,3 @@
     - [ ] Plano de contingência
 
 ---
-
-**Observação:**
-Priorize os itens de segurança, logging, monitoramento e CI/CD para garantir robustez e confiabilidade em produção. Cada subtarefa pode ser detalhada ainda mais conforme a equipe avançar.

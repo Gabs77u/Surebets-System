@@ -1,5 +1,6 @@
-# 🐳 Docker Compose - Sistema de Surebets
+# 🐳 Docker Compose - Sistema de Surebets v3.0.0
 # Configuração para desenvolvimento e produção
+# ✅ Implementações de Segurança v3.0.0 Incluídas
 
 version: '3.8'
 
@@ -15,11 +16,33 @@ services:
       - "5000:5000"  # Dashboard
       - "5001:5001"  # Admin API
     environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=dev-secret-key-change-in-production
-      - DATABASE_URL=postgresql://surebets:password@db:5432/surebets
+      # 🔐 Configurações de Segurança JWT
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-this-jwt-secret-in-production}
+      - JWT_ACCESS_TOKEN_EXPIRES=${JWT_ACCESS_TOKEN_EXPIRES:-3600}
+      - JWT_REFRESH_TOKEN_EXPIRES=${JWT_REFRESH_TOKEN_EXPIRES:-2592000}
+      
+      # 🛡️ Configurações de Rate Limiting
+      - RATELIMIT_STORAGE_URL=redis://redis:6379/1
+      - RATELIMIT_DEFAULT=100 per hour
+      - RATELIMIT_LOGIN_ATTEMPTS=5 per minute
+      
+      # 🔒 Configurações de Validação
+      - ENABLE_INPUT_VALIDATION=true
+      - ENABLE_SQL_INJECTION_PROTECTION=true
+      - ENABLE_XSS_PROTECTION=true
+      - ENABLE_CSRF_PROTECTION=true
+      
+      # 📊 Configurações de Monitoramento
+      - ENABLE_SECURITY_MONITORING=true
+      - ENABLE_PERFORMANCE_MONITORING=true
+      - SECURITY_LOG_LEVEL=INFO
+      
+      # 🗄️ Database e Cache
+      - DATABASE_URL=postgresql://surebets:${DB_PASSWORD:-password}@db:5432/surebets
       - REDIS_URL=redis://redis:6379/0
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=INFO
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
@@ -44,41 +67,40 @@ services:
     environment:
       - POSTGRES_DB=surebets
       - POSTGRES_USER=surebets
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/populate.sql:/docker-entrypoint-initdb.d/02-populate.sql
     ports:
       - "5432:5432"
     networks:
       - surebets-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U surebets -d surebets"]
+      test: ["CMD-SHELL", "pg_isready -U surebets"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # 🔴 Cache Redis
+  # 🔄 Redis Cache
   redis:
     image: redis:7-alpine
     container_name: surebets-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - surebets-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 5s
+      timeout: 3s
       retries: 3
 
-  # 🌐 Nginx Reverse Proxy
+  # 📊 Nginx Reverse Proxy (Produção)
   nginx:
     image: nginx:alpine
     container_name: surebets-nginx
@@ -88,86 +110,30 @@ services:
       - "443:443"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/nginx/sites-available:/etc/nginx/sites-available
       - ./docker/nginx/ssl:/etc/nginx/ssl
-      - ./static:/usr/share/nginx/html/static
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - surebets-app
     networks:
       - surebets-network
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    profiles:
+      - production
 
-  # 📊 Prometheus (Monitoring)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: surebets-prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-lifecycle'
-    networks:
-      - surebets-network
-
-  # 📈 Grafana (Visualization)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: surebets-grafana
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
-      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - prometheus
-    networks:
-      - surebets-network
-
-  # 📋 Portainer (Container Management)
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: surebets-portainer
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    networks:
-      - surebets-network
-
-# 🌐 Networks
+# 🌐 Redes
 networks:
   surebets-network:
     driver: bridge
-    name: surebets-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
-# 💾 Volumes Persistentes
+# 💾 Volumes
 volumes:
   postgres_data:
-    name: surebets-postgres-data
+    driver: local
   redis_data:
-    name: surebets-redis-data
-  prometheus_data:
-    name: surebets-prometheus-data
-  grafana_data:
-    name: surebets-grafana-data
-  portainer_data:
-    name: surebets-portainer-data
+    driver: local
+
+# 🔧 Configurações de Produção
+# Para usar em produção, execute:
+# docker-compose --profile production up -d

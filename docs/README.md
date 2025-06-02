@@ -4,8 +4,9 @@
 [![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
+[![Security](https://img.shields.io/badge/Security-OWASP%20Top%2010-red.svg)]()
 
-> Sistema profissional para detecção e análise de oportunidades de arbitragem em apostas esportivas com arquitetura modular enterprise-ready.
+> Sistema profissional para detecção e análise de oportunidades de arbitragem em apostas esportivas com arquitetura modular enterprise-ready, segurança avançada e validação rigorosa.
 
 ## 📋 Índice
 
@@ -27,58 +28,82 @@
 
 ## 🆕 Principais Alterações Recentes
 
-- **Arquitetura Modular Unificada:**
-  - Apps principais em `backend/apps/` (dashboard, admin_api, adapters)
-  - Utilitários centrais em `backend/core/` (i18n, segurança)
-  - Serviços de negócio em `backend/services/`
-  - Banco de dados em `backend/database/` (agora usando SQLite)
-  - Interface desktop Tkinter em `frontend/tinker_ui.py`
-  - Configurações centralizadas em `config/settings.py`
-  - Docker e scripts de automação em `docker/`
-  - Ponto de entrada e dependências em `src/`
+### 🔒 Segurança e Autenticação (NOVA IMPLEMENTAÇÃO)
+- **Sistema JWT Avançado**: 
+  - Autenticação robusta com access e refresh tokens
+  - Blacklist de tokens (Redis/memória) para logout seguro
+  - Sistema granular de roles (admin/operator/viewer)
+  - Suporte a cookies seguros para SPAs
+  - Renovação automática transparente
 
-- **Unificação e Refatoração:**
-  - Dashboard web consolidado e profissional
-  - API administrativa unificada e protegida
-  - Sistema de adaptadores extensível para múltiplas casas de apostas
-  - Internacionalização centralizada (PT-BR/EN)
-  - Imports atualizados para refletir a nova estrutura
+- **Validação Rigorosa com Pydantic**:
+  - Schemas de validação em todos os endpoints
+  - Sanitização automática contra XSS
+  - Detecção de SQL Injection
+  - Validação de força de senha
+  - Headers de segurança obrigatórios
 
-- **Limpeza e Remoção de Redundâncias:**
-  - Removidos dashboards, adaptadores e APIs duplicados
-  - Eliminação de scripts de migração, backups e artefatos antigos
-  - Diretórios de teste desnecessários e código legado removidos
+- **Proteções Avançadas**:
+  - Rate limiting configurável por IP
+  - CSRF protection implementado
+  - Logging estruturado de eventos de segurança
+  - Monitoramento de tentativas de ataque
 
-- **Testes e Qualidade:**
-  - Testes unitários, integração e performance automatizados
-  - Fixtures e benchmarking integrados
-  - Cobertura de código ampliada
+### 🧪 Sistema de Testes Expandido
+- **Testes de Segurança**: 
+  - `backend/tests/security/` com testes de penetração
+  - Validação contra payloads maliciosos
+  - Fuzzing automatizado
+  - Testes de escalação de privilégios
 
-- **Configuração e Ambiente:**
-  - Uso de SQLite por padrão (configurável)
-  - Variáveis de ambiente organizadas
-  - Dependências atualizadas em `requirements.txt`
+- **Testes de Integração JWT**:
+  - `backend/tests/integration/test_jwt_auth.py`
+  - Fluxo completo de autenticação
+  - Testes de roles e permissões
+  - Validação de blacklist de tokens
 
-- **Roadmap e Próximos Passos:**
-  - Implementação de autenticação JWT
-  - Substituição de prints por logging profissional
-  - Configuração de cache Redis
-  - Pipeline CI/CD e deploy automatizado
-  - Monitoramento e health checks
+- **Cobertura Ampliada**:
+  - Testes unitários para auth e validação
+  - Performance testing com cenários reais
+  - Mocks inteligentes para APIs externas
+
+### 🏗️ Arquitetura Modular Consolidada
+- **Apps principais em `backend/apps/`** (dashboard, admin_api, adapters)
+- **Utilitários centrais em `backend/core/`** (auth, i18n, validation)
+- **Serviços de negócio em `backend/services/`**
+- **Banco de dados em `backend/database/`** (SQLite configurável)
+- **Interface desktop Tkinter em `frontend/tinker_ui.py`**
+- **Configurações centralizadas em `config/settings.py`**
+- **Docker e scripts de automação em `docker/`**
+
+### 📚 Documentação Profissional Expandida
+- **[JWT Frontend Integration Guide](docs/JWT_FRONTEND_INTEGRACAO.md)**: Integração completa com React/Vue
+- **[Security Guide](docs/SECURITY.md)**: Documentação abrangente de segurança
+- **[API Documentation](docs/API.md)**: Endpoints atualizados com validação
+- **[Architecture Guide](docs/ARCHITECTURE.md)**: Arquitetura de segurança detalhada
+
+### 🔧 Melhorias de Produção
+- **Configuração por Ambiente**: Development vs Production
+- **Health Checks Avançados**: `/health` com status detalhado
+- **Métricas Prometheus**: `/metrics` para monitoramento
+- **Backup Automatizado**: Configurações e dados
+- **Deploy Seguro**: Containers hardened, usuário não-root
 
 ---
 
 ## 🎯 Visão Geral
 
-O Sistema de Surebets é uma aplicação Python profissional que detecta automaticamente oportunidades de arbitragem em múltiplas casas de apostas esportivas. O sistema foi completamente refatorado seguindo padrões enterprise com arquitetura modular, separação de responsabilidades e preparação para produção.
+O Sistema de Surebets é uma aplicação Python enterprise-ready que detecta automaticamente oportunidades de arbitragem em múltiplas casas de apostas esportivas. Completamente refatorado com **segurança avançada**, **validação rigorosa** e **arquitetura modular** seguindo padrões enterprise.
 
 ### 🌟 Principais Características
 
+- **🔒 Segurança Enterprise**: JWT avançado, validação Pydantic, proteção OWASP Top 10
 - **🔍 Detecção Automática**: Identifica oportunidades de arbitragem em tempo real
 - **📊 Dashboard Interativo**: Interface web moderna com gráficos e estatísticas
+- **🎭 Sistema de Roles**: Controle granular de acesso (admin/operator/viewer)
 - **🌐 Multi-idioma**: Suporte para Português e Inglês
 - **🏢 Arquitetura Enterprise**: Estrutura modular e profissional
-- **🔒 Segurança**: Autenticação, rate limiting e proteções integradas
+- **🛡️ Proteções Avançadas**: Rate limiting, XSS, SQL injection, CSRF
 - **📈 Monitoramento**: Logs profissionais e métricas de performance
 - **🐳 Containerização**: Deploy com Docker e Docker Compose
 - **⚡ Performance**: Cache Redis e otimizações de performance
@@ -91,6 +116,13 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 - **Análise em Tempo Real**: Processamento contínuo de odds e oportunidades
 - **Filtros Avançados**: Filtros personalizáveis por esporte, liga e mercado
 
+### 🔒 Segurança e Autenticação
+- **Sistema JWT Robusto**: Access/refresh tokens com blacklist
+- **Roles Granulares**: Admin, operador, visualizador
+- **Validação Rigorosa**: Pydantic schemas em todos os endpoints
+- **Proteções Web**: XSS, SQL injection, CSRF, rate limiting
+- **Audit Trail**: Logging de eventos de segurança
+
 ### 📊 Interface e Visualização
 - **Dashboard Web**: Interface Flask moderna e responsiva
 - **Interface Desktop**: Aplicação Tkinter nativa
@@ -99,6 +131,7 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 
 ### 🔧 Administração
 - **Painel Admin**: Gerenciamento completo do sistema
+- **Gestão de Usuários**: CRUD completo com validação
 - **Configurações**: Ajustes flexíveis de parâmetros
 - **Notificações**: Sistema de alertas e notificações
 - **Logs**: Sistema de auditoria e troubleshooting
@@ -110,14 +143,21 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 ├── 🚀 backend/              # Aplicação Backend
 │   ├── 📱 apps/             # Aplicações Principais
 │   │   ├── dashboard.py     # Dashboard Web Unificado
-│   │   ├── admin_api.py     # API Administrativa
+│   │   ├── admin_api.py     # API Administrativa Segura
 │   │   └── adapters.py      # Adaptadores de Bookmakers
 │   ├── 🔧 core/             # Utilities Centrais
+│   │   ├── auth.py          # Sistema JWT Avançado
+│   │   ├── validation.py    # Validação Pydantic
 │   │   └── i18n.py         # Sistema de Internacionalização
 │   ├── 🛠️ services/         # Serviços de Negócio
 │   │   ├── arbitrage.py     # Engine de Arbitragem
 │   │   └── notification.py  # Sistema de Notificações
-│   └── 🗄️ database/         # Componentes de Banco
+│   ├── 🗄️ database/         # Componentes de Banco
+│   └── 🧪 tests/            # Testes Estruturados
+│       ├── unit/              # Testes unitários
+│       ├── integration/       # Testes de integração JWT
+│       ├── security/          # Testes de segurança
+│       └── performance/       # Testes de performance
 ├── 🖥️ frontend/             # Interfaces de Usuário
 │   └── tinker_ui.py        # Interface Tkinter
 ├── ⚙️ config/               # Configurações
@@ -126,7 +166,11 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 ├── 📁 src/                  # Entry Point
 │   ├── main.py             # Script Principal
 │   └── requirements.txt    # Dependências Python
-└── 📚 docs/                 # Documentação
+└── 📚 docs/                 # Documentação Expandida
+    ├── JWT_FRONTEND_INTEGRACAO.md  # Novo: Guia JWT
+    ├── SECURITY.md                 # Novo: Segurança
+    ├── API.md                      # API atualizada
+    ├── ARCHITECTURE.md             # Arquitetura
     ├── PRODUCTION_ROADMAP.md
     └── DESENVOLVIMENTO_COMPLETO.md
 ```
@@ -138,6 +182,7 @@ O Sistema de Surebets é uma aplicação Python profissional que detecta automat
 - **Factory Pattern**: Criação de adaptadores de bookmakers
 - **Observer Pattern**: Sistema de notificações e eventos
 - **Strategy Pattern**: Algoritmos de arbitragem intercambiáveis
+- **Defense in Depth**: Múltiplas camadas de segurança
 
 ## 🚀 Como Iniciar a Aplicação
 
@@ -166,7 +211,8 @@ docker exec -it <nome_do_container_backend> sqlite3 /app/data/surebets.db
 # Para rodar migrações ou scripts utilitários:
 docker-compose -f docker/docker-compose.yml exec backend python backend/migrate_to_sqlite.py
 
-# Dica: Para ambiente de produção, utilize o arquivo docker-compose.prod.yml e configure as variáveis de ambiente adequadas.
+# Dica: Para ambiente de produção, utilize o arquivo docker-compose.prod.yml 
+# e configure as variáveis de ambiente de segurança adequadas.
 ```
 
 ### 🐍 Execução Local (Desenvolvimento)
@@ -180,7 +226,7 @@ venv\Scripts\activate    # Windows
 # 2. Instale as dependências
 pip install -r src/requirements.txt
 
-# 3. Configure as variáveis de ambiente (opcional)
+# 3. Configure as variáveis de ambiente de segurança
 cp config/settings.example.py config/settings.py
 # Edite config/settings.py conforme necessário
 
@@ -194,7 +240,7 @@ python -m backend.apps.admin_api
 
 ## 🔧 Configuração
 
-### ⚙️ Variáveis de Ambiente
+### ⚙️ Variáveis de Ambiente Obrigatórias
 
 ```bash
 # Configurações básicas
@@ -202,8 +248,18 @@ FLASK_ENV=production
 SECRET_KEY=your-secret-key-here
 DATABASE_URL=sqlite:///surebets.db
 
-# Redis (Cache)
+# JWT Security (OBRIGATÓRIO)
+JWT_SECRET_KEY=your-256-bit-secret-key
+JWT_ACCESS_TOKEN_EXPIRES_MINUTES=60
+JWT_REFRESH_TOKEN_EXPIRES_DAYS=30
+
+# Redis (Cache e Blacklist de Tokens)
 REDIS_URL=redis://localhost:6379/0
+
+# Security Settings
+ENVIRONMENT=production
+RATE_LIMIT_PER_MINUTE=100
+ENABLE_CORS=false
 
 # APIs de Bookmakers
 BOOKMAKER_API_KEY=your-api-key
@@ -212,6 +268,10 @@ RATE_LIMIT=100
 # Logging
 LOG_LEVEL=INFO
 LOG_FILE=logs/surebets.log
+
+# Admin Account (para bootstrap)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=pbkdf2:sha256:150000$...
 ```
 
 ### 📊 Configurações do Sistema
@@ -229,6 +289,20 @@ NOTIFICATION_SETTINGS = {
     'sms_enabled': False,
     'webhook_url': 'https://your-webhook.com'
 }
+
+# Configurações de segurança por ambiente
+SECURITY_SETTINGS = {
+    'development': {
+        'blacklist_backend': 'memory',
+        'cors_origins': ['*'],
+        'rate_limit': 1000,
+    },
+    'production': {
+        'blacklist_backend': 'redis',
+        'cors_origins': ['https://yourdomain.com'],
+        'rate_limit': 100,
+    }
+}
 ```
 
 ## 🧪 Testes
@@ -237,16 +311,25 @@ NOTIFICATION_SETTINGS = {
 
 ```bash
 # Testes unitários
-pytest tests/unit/
+pytest backend/tests/unit/ -v
 
-# Testes de integração
-pytest tests/integration/
+# Testes de integração (incluindo JWT)
+pytest backend/tests/integration/ -v
 
-# Testes completos com coverage
-pytest --cov=backend tests/ --cov-report=html
+# Testes de segurança
+pytest backend/tests/security/ -v
 
 # Testes de performance
-locust -f tests/performance/locustfile.py
+pytest backend/tests/performance/ -v
+
+# Testes completos com coverage
+pytest --cov=backend backend/tests/ --cov-report=html
+
+# Testes específicos de autenticação
+pytest backend/tests/integration/test_jwt_auth.py -v
+
+# Testes de penetração (simulação de ataques)
+pytest backend/tests/security/test_penetration.py -v
 ```
 
 ### 📊 Coverage Report
@@ -256,48 +339,80 @@ locust -f tests/performance/locustfile.py
 coverage run -m pytest
 coverage report
 coverage html  # Relatório HTML em htmlcov/
+
+# Coverage específico de segurança
+coverage run -m pytest backend/tests/security/
+coverage report --include="backend/core/auth.py,backend/core/validation.py"
+```
+
+### 🛡️ Testes de Segurança
+
+```bash
+# Análise estática de segurança
+bandit -r backend/ -f json -o security-report.json
+
+# Verificação de dependências vulneráveis
+safety check
+pip-audit
+
+# Testes de carga para rate limiting
+locust -f backend/tests/performance/locustfile.py
 ```
 
 ## 🚀 Deploy
 
 ### 🌍 Ambientes
 
-- **Development**: `http://localhost:5000`
-- **Staging**: `https://staging.surebets.com`
-- **Production**: `https://surebets.com`
+- **Development**: `http://localhost:5000` (Blacklist em memória, CORS permissivo)
+- **Staging**: `em breve` (Redis, logs detalhados)
+- **Production**: `em breve` (Redis, logs estruturados, rate limiting agressivo)
 
 ### 🚀 Deploy para Produção
 
 ```bash
-# Build e push da imagem
+# Build e push da imagem com security hardening
 docker build -t surebets-system:latest .
 docker tag surebets-system:latest registry.com/surebets-system:latest
 docker push registry.com/surebets-system:latest
 
-# Deploy com Docker Compose
+# Deploy com Docker Compose (produção)
 docker-compose -f docker/docker-compose.prod.yml up -d
 
 # Verificar saúde do serviço
-curl http://localhost:5000/health
+curl https://yourdomain.com/health
+curl https://yourdomain.com/metrics
+
+# Testar autenticação
+curl -X POST https://yourdomain.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your-password"}'
 ```
 
 ### 📈 Monitoramento
 
 - **Health Checks**: `/health`, `/ready`
 - **Metrics**: `/metrics` (Prometheus format)
-- **Logs**: Centralizados via ELK stack
-- **Alertas**: PagerDuty/Slack integration
+- **Security Events**: Logs estruturados via ELK stack
+- **JWT Monitoring**: Blacklist size, token refresh rate
+- **Alertas**: PagerDuty/Slack integration para eventos de segurança
 
 ## 📖 Documentação
 
-- **[Documentação Completa](DESENVOLVIMENTO_COMPLETO.md)**
-- **[Roadmap de Produção](PRODUCTION_ROADMAP.md)**
-- **[API Documentation](API.md)**
-- **[Deployment Guide](DEPLOYMENT.md)**
-- **[Architecture Guide](ARCHITECTURE.md)**
-- **[Contributing Guidelines](CONTRIBUTING.md)**
-- **[Security Guide](SECURITY.md)**
-- **[Performance Guide](PERFORMANCE.md)**
+### 📚 Documentação Principal
+- **[Documentação Completa](docs/DESENVOLVIMENTO_COMPLETO.md)**
+- **[Roadmap de Produção](docs/PRODUCTION_ROADMAP.md)**
+- **[Guia de Arquitetura](docs/ARCHITECTURE.md)**
+- **[Guia de Deployment](docs/DEPLOYMENT.md)**
+
+### 🔒 Documentação de Segurança (NOVA)
+- **[Guia de Segurança](docs/SECURITY.md)**: Segurança abrangente e OWASP Top 10
+- **[API Documentation](docs/API.md)**: Endpoints atualizados com validação
+- **[JWT Frontend Integration](docs/JWT_FRONTEND_INTEGRACAO.md)**: Integração React/Vue
+
+### 👥 Documentação para Desenvolvedores
+- **[Contributing Guidelines](docs/CONTRIBUTING.md)**
+- **[Performance Guide](docs/PERFORMANCE.md)**
+- **[Changelog](docs/CHANGELOG.md)**
 
 ## 🤝 Contribuição
 
@@ -312,56 +427,74 @@ curl http://localhost:5000/health
 ### 📝 Padrões de Código
 
 - **Python**: PEP 8, Black formatter
+- **Security**: Todos os inputs devem ser validados com Pydantic
+- **Authentication**: JWT obrigatório para endpoints sensíveis
 - **Commits**: Conventional Commits
-- **Tests**: Cobertura mínima de 90%
+- **Tests**: Cobertura mínima de 90%, incluindo testes de segurança
 - **Documentation**: Docstrings obrigatórias
 
 ### 🔍 Code Review
 
 - Todos os PRs precisam de aprovação
-- Testes automatizados devem passar
+- Testes automatizados devem passar (incluindo segurança)
 - Cobertura de código mantida
+- Análise de segurança com Bandit
 - Documentação atualizada
 
 ## 📊 Status do Projeto
 
 ### ✅ Funcionalidades Implementadas
 
-- [x] **Arquitetura Modular Unificada**: Apps, core, services, database, frontend, config, docker, src
+#### Segurança e Autenticação
+- [x] **Sistema JWT Avançado**: Access/refresh tokens, blacklist, roles
+- [x] **Validação Pydantic**: Schemas rigorosos em todos os endpoints
+- [x] **Proteções Web**: XSS, SQL injection, CSRF, rate limiting
+- [x] **Headers de Segurança**: Implementação completa OWASP
+- [x] **Logging de Segurança**: Eventos estruturados e auditoria
+- [x] **Testes de Segurança**: Penetração, fuzzing, validação
+
+#### Arquitetura e Core
+- [x] **Arquitetura Modular Unificada**: Apps, core, services, database
 - [x] **Dashboard Web Consolidado**: Interface Flask profissional
-- [x] **API Administrativa Unificada**: Endpoints protegidos e gerenciamento
-- [x] **Sistema de Adaptadores Extensível**: Suporte a múltiplas casas de apostas
+- [x] **API Administrativa Segura**: Endpoints protegidos e validados
+- [x] **Sistema de Adaptadores Extensível**: Suporte a múltiplas casas
 - [x] **Internacionalização Centralizada**: PT-BR e EN
 - [x] **Interface Desktop Tkinter**: Integração com backend
-- [x] **Testes Automatizados**: Unitários, integração, performance
+
+#### Qualidade e Testes
+- [x] **Testes Automatizados**: Unitários, integração, performance, segurança
 - [x] **Configuração Centralizada**: settings.py e variáveis de ambiente
+- [x] **CI/CD Ready**: Docker, health checks, métricas
 
 ### 🚧 Em Desenvolvimento
 
-- [ ] **Autenticação JWT**: Sistema robusto de autenticação
-- [ ] **Cache Redis**: Layer de cache para performance
-- [ ] **Logging Profissional**: Substituição de prints por logs estruturados
-- [ ] **Monitoring e Health Checks**: Métricas e alertas profissionais
-- [ ] **CI/CD Pipeline**: Deploy automatizado
+- [ ] **Cache Redis Avançado**: Layer de cache para performance otimizada
+- [ ] **Logging Profissional**: Substituição completa de prints por logs estruturados
+- [ ] **Monitoring Avançado**: Métricas detalhadas e alertas inteligentes
+- [ ] **2FA Implementation**: Autenticação de dois fatores
+- [ ] **API Rate Limiting Dinâmico**: Ajuste automático baseado em uso
 
 ### 🎯 Roadmap
 
-1. **Q2 2025**: Sistema de monitoring, logging e observabilidade
-2. **Q3 2025**: Otimizações de performance, cache Redis, retry logic
-3. **Q4 2025**: Deploy automatizado, CI/CD, backup e disaster recovery
+1. **Q1 2025**: Sistema de monitoring, logging e observabilidade completos
+2. **Q2 2025**: Otimizações de performance, cache Redis, retry logic
+3. **Q3 2025**: Deploy automatizado, CI/CD completo, backup e disaster recovery
+4. **Q4 2025**: Machine learning para detecção de arbitragem, mobile app
 
 ## 📞 Suporte
 
 ### 🆘 Precisa de Ajuda?
 
-- **Issues**: [GitHub Issues](https://github.com/Gabs77u/surebets-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com//surebets-system/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Gabs77u/Surebets-System/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Gabs77u/surebets-system/discussions)
 - **Email**: gabrielaraujoseven@gmail.com
-- 
+- **Security**: security@surebets-system.com (para vulnerabilidades)
 
 ### 📚 Recursos Adicionais
 
-- **NothingHere**
+- **Stack Overflow**: Tag `surebets-system`
+- **Discord**: Comunidade de desenvolvedores
+- **Documentation**: Documentação sempre atualizada
 
 ---
 
@@ -372,8 +505,12 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 ## 🙏 Agradecimentos
 
 - **Flask Team**: Framework web fantástico
-- **Python Community**: Ecosystem incrível
+- **Pydantic Team**: Validação robusta e type safety
+- **Flask-JWT-Extended**: Sistema JWT robusto
+- **Python Community**: Ecosystem incrível de segurança
+- **OWASP**: Guidelines de segurança web
 - **Contributors**: Todos que contribuíram para este projeto
+- **Security Researchers**: Feedback valioso para melhorias de segurança
 - **Beta Testers**: Feedback valioso durante desenvolvimento
 
 ---
@@ -382,6 +519,8 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 **[⬆ Voltar ao Topo](#-sistema-de-surebets---detecção-de-arbitragem-esportiva)**
 
-Feito com ❤️ pela equipe Surebets Hunters
+Feito com ❤️ e 🔒 pela equipe Surebets Hunters
+
+[![Security](https://img.shields.io/badge/Security-First-red.svg)]() [![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)]() [![Coverage](https://img.shields.io/badge/Coverage-90%25-brightgreen.svg)]()
 
 </div>

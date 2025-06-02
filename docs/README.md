@@ -399,20 +399,20 @@ curl -X POST https://yourdomain.com/api/auth/login \
 ## 📖 Documentação
 
 ### 📚 Documentação Principal
-- **[Documentação Completa](/DESENVOLVIMENTO_COMPLETO.md)**
-- **[Roadmap de Produção](/PRODUCTION_ROADMAP.md)**
-- **[Guia de Arquitetura](/ARCHITECTURE.md)**
-- **[Guia de Deployment](/DEPLOYMENT.md)**
+- **[Documentação Completa](DESENVOLVIMENTO_COMPLETO.md)**
+- **[Roadmap de Produção](PRODUCTION_ROADMAP.md)**
+- **[Guia de Arquitetura](ARCHITECTURE.md)**
+- **[Guia de Deployment](DEPLOYMENT.md)**
 
 ### 🔒 Documentação de Segurança (NOVA)
-- **[Guia de Segurança](/SECURITY.md)**: Segurança abrangente e OWASP Top 10
-- **[API Documentation](/API.md)**: Endpoints atualizados com validação
-- **[JWT Frontend Integration](/JWT_FRONTEND_INTEGRACAO.md)**: Integração React/Vue
+- **[Guia de Segurança](SECURITY.md)**: Segurança abrangente e OWASP Top 10
+- **[API Documentation](API.md)**: Endpoints atualizados com validação
+- **[JWT Frontend Integration](JWT_FRONTEND_INTEGRACAO.md)**: Integração React/Vue
 
 ### 👥 Documentação para Desenvolvedores
-- **[Contributing Guidelines](/CONTRIBUTING.md)**
-- **[Performance Guide](/PERFORMANCE.md)**
-- **[Changelog](/CHANGELOG.md)**
+- **[Contributing Guidelines](CONTRIBUTING.md)**
+- **[Performance Guide](PERFORMANCE.md)**
+- **[Changelog](CHANGELOG.md)**
 
 ## 🤝 Contribuição
 

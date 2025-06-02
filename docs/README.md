@@ -399,20 +399,20 @@ curl -X POST https://yourdomain.com/api/auth/login \
 ## 📖 Documentação
 
 ### 📚 Documentação Principal
-- **[Documentação Completa](docs/DESENVOLVIMENTO_COMPLETO.md)**
-- **[Roadmap de Produção](docs/PRODUCTION_ROADMAP.md)**
-- **[Guia de Arquitetura](docs/ARCHITECTURE.md)**
-- **[Guia de Deployment](docs/DEPLOYMENT.md)**
+- **[Documentação Completa](/DESENVOLVIMENTO_COMPLETO.md)**
+- **[Roadmap de Produção](/PRODUCTION_ROADMAP.md)**
+- **[Guia de Arquitetura](/ARCHITECTURE.md)**
+- **[Guia de Deployment](/DEPLOYMENT.md)**
 
 ### 🔒 Documentação de Segurança (NOVA)
-- **[Guia de Segurança](docs/SECURITY.md)**: Segurança abrangente e OWASP Top 10
-- **[API Documentation](docs/API.md)**: Endpoints atualizados com validação
-- **[JWT Frontend Integration](docs/JWT_FRONTEND_INTEGRACAO.md)**: Integração React/Vue
+- **[Guia de Segurança](/SECURITY.md)**: Segurança abrangente e OWASP Top 10
+- **[API Documentation](/API.md)**: Endpoints atualizados com validação
+- **[JWT Frontend Integration](/JWT_FRONTEND_INTEGRACAO.md)**: Integração React/Vue
 
 ### 👥 Documentação para Desenvolvedores
-- **[Contributing Guidelines](docs/CONTRIBUTING.md)**
-- **[Performance Guide](docs/PERFORMANCE.md)**
-- **[Changelog](docs/CHANGELOG.md)**
+- **[Contributing Guidelines](/CONTRIBUTING.md)**
+- **[Performance Guide](/PERFORMANCE.md)**
+- **[Changelog](/CHANGELOG.md)**
 
 ## 🤝 Contribuição
 
@@ -488,7 +488,7 @@ curl -X POST https://yourdomain.com/api/auth/login \
 - **Issues**: [GitHub Issues](https://github.com/Gabs77u/Surebets-System/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Gabs77u/surebets-system/discussions)
 - **Email**: gabrielaraujoseven@gmail.com
-- **Security**: security@surebets-system.com (para vulnerabilidades)
+- **Security**: gabrielaraujoseven@gmail.com (para vulnerabilidades)
 
 ### 📚 Recursos Adicionais
 

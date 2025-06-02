@@ -5,30 +5,32 @@ Unifica todas as funcionalidades administrativas em uma única API,
 removendo redundâncias e padronizando endpoints.
 """
 
-from flask import Flask, jsonify, request, session, redirect, url_for
+from flask import Flask, jsonify, request, session
 from functools import wraps
 import os
 import logging
 import secrets
-import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../backend')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from datetime import datetime
+from typing import Dict, List, Any
 
 # Importar módulos unificados
 from config import settings, security
 from backend.services.notification import notify_all
-from backend.apps.adapters import get_all_adapters, get_adapter
-from backend.core.i18n import get_text, get_language_dict
+from backend.apps.adapters import get_all_adapters
+from backend.core.i18n import get_text
 from database.database import DatabaseManager
 from backend.core.auth import AuthManager
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Configurar logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG,  # Mude para DEBUG para capturar logs detalhados
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('surebets_app.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Inicializar Flask
@@ -269,7 +271,8 @@ def admin_insert_bet():
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{get_text("missing_field", lang)}: {field}'}), 400
-          # Validar odd
+          
+        # Validar odd
         try:
             odd = float(data['odd'])
             if odd <= 1.0:

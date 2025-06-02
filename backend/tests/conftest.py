@@ -9,6 +9,7 @@ import tempfile
 import sqlite3
 from pathlib import Path
 from unittest.mock import Mock, patch
+import logging
 
 # Importar módulos do sistema
 from database.database import DatabaseManager, get_db
@@ -53,7 +54,7 @@ def clean_database(test_database_path):
                 conn.executescript(schema_sql)
                 conn.commit()
         except Exception as e:
-            print(f"Erro ao criar schema: {e}")
+            logging.info(f"Erro ao criar schema: {e}")
             # Se falhou, tentar executar script completo novamente
             conn.executescript(schema_sql)
             conn.commit()
@@ -79,7 +80,7 @@ def populated_database(clean_database):
     try:
         cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [row[0] for row in cursor.fetchall()]
-        print(f"Tabelas disponíveis: {tables}")
+        logging.info(f"Tabelas disponíveis: {tables}")
         
         # Inserir dados de teste
         populate_file = Path(__file__).parent.parent / "database" / "populate.sql"
@@ -93,10 +94,10 @@ def populated_database(clean_database):
             # Verificar se os dados foram inseridos
             cursor = conn.execute("SELECT COUNT(*) as count FROM events")
             event_count = cursor.fetchone()[0]
-            print(f"Eventos inseridos: {event_count}")
+            logging.info(f"Eventos inseridos: {event_count}")
             
     except Exception as e:
-        print(f"Erro ao popular banco: {e}")
+        logging.info(f"Erro ao popular banco: {e}")
         raise
     
     yield db

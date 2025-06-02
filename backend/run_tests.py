@@ -9,37 +9,40 @@ import sys
 import subprocess
 import argparse
 from pathlib import Path
+import logging
 
 # Adicionar o diretório backend ao path
 BACKEND_DIR = Path(__file__).parent
 sys.path.insert(0, str(BACKEND_DIR))
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def run_command(cmd, description):
     """Executa um comando e exibe resultado."""
-    print(f"\n{'='*60}")
-    print(f"🔄 {description}")
-    print(f"{'='*60}")
+    logging.info(f"\n{'='*60}")
+    logging.info(f"🔄 {description}")
+    logging.info(f"{'='*60}")
     
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=BACKEND_DIR)
         
         if result.stdout:
-            print("📄 STDOUT:")
-            print(result.stdout)
+            logging.info("📄 STDOUT:")
+            logging.info(result.stdout)
         
         if result.stderr:
-            print("⚠️ STDERR:")
-            print(result.stderr)
+            logging.info("⚠️ STDERR:")
+            logging.info(result.stderr)
         
         if result.returncode == 0:
-            print(f"✅ {description} - SUCESSO")
+            logging.info(f"✅ {description} - SUCESSO")
         else:
-            print(f"❌ {description} - FALHOU (código: {result.returncode})")
+            logging.info(f"❌ {description} - FALHOU (código: {result.returncode})")
             
         return result.returncode == 0
     
     except Exception as e:
-        print(f"💥 Erro ao executar comando: {e}")
+        logging.info(f"💥 Erro ao executar comando: {e}")
         return False
 
 def main():
@@ -63,16 +66,16 @@ def main():
     
     args = parser.parse_args()
     
-    print("🧪 SUREBETS SYSTEM - EXECUÇÃO DE TESTES")
-    print("=" * 60)
+    logging.info("🧪 SUREBETS SYSTEM - EXECUÇÃO DE TESTES")
+    logging.info("=" * 60)
     
     # Verificar se pytest está instalado
     try:
         subprocess.run(["python", "-m", "pytest", "--version"], 
                       capture_output=True, check=True)
     except subprocess.CalledProcessError:
-        print("❌ pytest não está instalado!")
-        print("💡 Execute: pip install pytest pytest-asyncio pytest-cov pytest-benchmark")
+        logging.info("❌ pytest não está instalado!")
+        logging.info("💡 Execute: pip install pytest pytest-asyncio pytest-cov pytest-benchmark")
         sys.exit(1)
     
     # Comandos base
@@ -105,17 +108,17 @@ def main():
             success_count += 1
     
     # Relatório final
-    print(f"\n{'='*60}")
-    print("📊 RELATÓRIO FINAL")
-    print(f"{'='*60}")
-    print(f"✅ Sucessos: {success_count}/{total_count}")
-    print(f"❌ Falhas: {total_count - success_count}/{total_count}")
+    logging.info(f"\n{'='*60}")
+    logging.info("📊 RELATÓRIO FINAL")
+    logging.info(f"{'='*60}")
+    logging.info(f"✅ Sucessos: {success_count}/{total_count}")
+    logging.info(f"❌ Falhas: {total_count - success_count}/{total_count}")
     
     if success_count == total_count:
-        print("🎉 Todos os testes passaram!")
+        logging.info("🎉 Todos os testes passaram!")
         sys.exit(0)
     else:
-        print("💥 Alguns testes falharam!")
+        logging.info("💥 Alguns testes falharam!")
         sys.exit(1)
 
 if __name__ == "__main__":

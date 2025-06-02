@@ -16,6 +16,7 @@ import subprocess
 import sys
 import os
 import time
+import logging
 
 # Adicionar o diretório raiz ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -32,6 +33,17 @@ lang = 'pt' if lang and lang.startswith('pt') else 'en'
 i18n.set_language(lang)
 
 API_BASE = 'http://localhost:5000/api'
+
+# Configuração do logger
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler("surebets_app.log"),
+        logging.StreamHandler()
+    ]
+)
+
 
 class SurebetsApp(tk.Tk):
     def __init__(self):
@@ -50,73 +62,73 @@ class SurebetsApp(tk.Tk):
         """Cria a aba de surebets usando o sistema unificado."""
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text=i18n.t('dashboard_title'))
-        
+
         # Filtros
         filter_frame = ttk.LabelFrame(frame, text=i18n.t('filters'))
         filter_frame.pack(fill='x', padx=10, pady=5)
-        
+
         # Esporte
         ttk.Label(filter_frame, text=i18n.t('sport')).grid(row=0, column=0, padx=2, pady=2)
         self.sport_var = tk.StringVar(value='soccer')
         self.sport_combo = ttk.Combobox(
-            filter_frame, 
-            textvariable=self.sport_var, 
-            values=['soccer', 'tennis', 'basketball'], 
+            filter_frame,
+            textvariable=self.sport_var,
+            values=['soccer', 'tennis', 'basketball'],
             state='readonly'
         )
         self.sport_combo.grid(row=0, column=1, padx=2, pady=2)
-        
+
         # Casas de apostas
         ttk.Label(filter_frame, text=i18n.t('bookmakers')).grid(row=0, column=2, padx=2, pady=2)
         self.bookmaker_var = tk.StringVar()
         self.bookmaker_combo = ttk.Entry(filter_frame, textvariable=self.bookmaker_var)
         self.bookmaker_combo.grid(row=0, column=3, padx=2, pady=2)
-        
+
         # Lucro mínimo
         ttk.Label(filter_frame, text=i18n.t('min_profit')).grid(row=0, column=4, padx=2, pady=2)
         self.min_profit_var = tk.DoubleVar(value=2.0)
         self.min_profit_spin = ttk.Spinbox(
-            filter_frame, 
-            from_=0, 
-            to=20, 
-            increment=0.5, 
-            textvariable=self.min_profit_var, 
+            filter_frame,
+            from_=0,
+            to=20,
+            increment=0.5,
+            textvariable=self.min_profit_var,
             width=5
         )
         self.min_profit_spin.grid(row=0, column=5, padx=2, pady=2)
-        
+
         # Busca
         ttk.Label(filter_frame, text=i18n.t('search')).grid(row=0, column=6, padx=2, pady=2)
         self.search_var = tk.StringVar()
         self.search_entry = ttk.Entry(filter_frame, textvariable=self.search_var, width=20)
         self.search_entry.grid(row=0, column=7, padx=2, pady=2)
-        
+
         # Botão atualizar
         ttk.Button(
-            filter_frame, 
-            text=i18n.t('update_now'), 
+            filter_frame,
+            text=i18n.t('update_now'),
             command=self.update_surebets_table
         ).grid(row=0, column=8, padx=2, pady=2)
-        
+
         # Tabela de oportunidades
         self.surebets_tree = ttk.Treeview(
-            frame, 
-            columns=('event', 'market', 'profit', 'bookmakers', 'actions'), 
+            frame,
+            columns=('event', 'market', 'profit', 'bookmakers', 'actions'),
             show='headings'
         )
-        
+
         for col in self.surebets_tree['columns']:
             header_text = i18n.t(col) if i18n.t(col) != col else col.title()
             self.surebets_tree.heading(col, text=header_text)
             self.surebets_tree.column(col, width=150)
-            
+
         self.surebets_tree.pack(fill='both', expand=True, padx=10, pady=5)
         self.surebets_tree.bind('<Double-1>', self.show_surebet_details)
-        
+
         # Status
         self.surebets_status = tk.Label(frame, text='', fg='blue')
         self.surebets_status.pack()
-        
+
         # Atualização automática
         self.update_surebets_table()
 
@@ -127,7 +139,7 @@ class SurebetsApp(tk.Tk):
         min_profit = self.min_profit_var.get()
         bookmakers = [b.strip() for b in self.bookmaker_var.get().split(',') if b.strip()]
         search = self.search_var.get().lower()
-        
+
         def fetch(sport, min_profit, bookmakers, search):
             try:
                 payload = {
@@ -137,50 +149,53 @@ class SurebetsApp(tk.Tk):
                 }
                 resp = requests.post(f'{API_BASE}/opportunities', json=payload, timeout=3)
                 data = resp.json()
-                
+
+                # Corrigir para acessar a lista de oportunidades corretamente
+                opportunities = data.get('opportunities', [])
+
                 # Filtrar por busca
                 if search:
-                    data = [
-                        item for item in data 
+                    opportunities = [
+                        item for item in opportunities
                         if search in item['event'].lower() or search in item['market'].lower()
                     ]
-                
+
                 def update_table():
                     self.surebets_tree.delete(*self.surebets_tree.get_children())
-                    for item in data:
+                    for item in opportunities:
                         self.surebets_tree.insert(
-                            '', 'end', 
+                            '', 'end',
                             values=(
-                                item['event'], 
-                                item['market'], 
-                                f"{item['profit']:.2f}%", 
-                                ' vs '.join(item['bookmakers']), 
+                                item['event'],
+                                item['market'],
+                                f"{item['profit']:.2f}%",
+                                item.get('bookmaker', 'N/A'),
                                 i18n.t('details')
                             )
                         )
                     self.surebets_status.config(text='')
-                
+
                 try:
                     self.after(0, update_table)
                 except RuntimeError:
                     pass
-                    
+
             except Exception as e:
                 def show_error():
                     self.surebets_tree.delete(*self.surebets_tree.get_children())
                     self.surebets_status.config(text=f"{i18n.t('error')}: {e}")
-                
+
                 try:
                     self.after(0, show_error)
                 except RuntimeError:
                     pass
-            
+
             # Reagendar próxima atualização
             try:
                 self.after(5000, self.update_surebets_table)
             except RuntimeError:
                 pass
-        
+
         threading.Thread(target=fetch, args=(sport, min_profit, bookmakers, search), daemon=True).start()
 
     def show_surebet_details(self, event):
@@ -188,7 +203,7 @@ class SurebetsApp(tk.Tk):
         item_id = self.surebets_tree.focus()
         if not item_id:
             return
-            
+
         values = self.surebets_tree.item(item_id, 'values')
         details = (
             f"{i18n.t('event')}: {values[0]}\n"
@@ -202,41 +217,41 @@ class SurebetsApp(tk.Tk):
         """Cria a aba de jogos."""
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text=i18n.t('games_tab'))
-        
+
         # Jogos ao vivo
         live_label = ttk.Label(frame, text=i18n.t('live_games'), font=('Arial', 14, 'bold'))
         live_label.pack(pady=5)
-        
+
         self.live_tree = ttk.Treeview(
-            frame, 
-            columns=('event', 'status', 'start_time', 'bookmaker'), 
+            frame,
+            columns=('event', 'status', 'start_time', 'bookmaker'),
             show='headings'
         )
-        
+
         for col in self.live_tree['columns']:
             header_text = i18n.t(col) if i18n.t(col) != col else col.title()
             self.live_tree.heading(col, text=header_text)
             self.live_tree.column(col, width=180)
-            
+
         self.live_tree.pack(fill='x', padx=10)
-        
+
         # Próximos jogos
         up_label = ttk.Label(frame, text=i18n.t('upcoming_games'), font=('Arial', 14, 'bold'))
         up_label.pack(pady=5)
-        
+
         self.up_tree = ttk.Treeview(
-            frame, 
-            columns=('event', 'status', 'start_time', 'bookmaker'), 
+            frame,
+            columns=('event', 'status', 'start_time', 'bookmaker'),
             show='headings'
         )
-        
+
         for col in self.up_tree['columns']:
             header_text = i18n.t(col) if i18n.t(col) != col else col.title()
             self.up_tree.heading(col, text=header_text)
             self.up_tree.column(col, width=180)
-            
+
         self.up_tree.pack(fill='x', padx=10)
-        
+
         # Atualização automática
         self.update_games_tables()
 
@@ -246,108 +261,108 @@ class SurebetsApp(tk.Tk):
             try:
                 live = requests.get(f'{API_BASE}/games/live', timeout=3).json().get('games', [])
                 up = requests.get(f'{API_BASE}/games/upcoming', timeout=3).json().get('games', [])
-                
+
                 def update_tables():
                     # Atualizar jogos ao vivo
                     self.live_tree.delete(*self.live_tree.get_children())
                     for g in live:
                         self.live_tree.insert(
-                            '', 'end', 
+                            '', 'end',
                             values=(
-                                g.get('name'), 
-                                g.get('status'), 
-                                g.get('start_time'), 
+                                g.get('name'),
+                                g.get('status'),
+                                g.get('start_time'),
                                 g.get('bookmaker')
                             )
                         )
-                    
+
                     # Atualizar próximos jogos
                     self.up_tree.delete(*self.up_tree.get_children())
                     for g in up:
                         self.up_tree.insert(
-                            '', 'end', 
+                            '', 'end',
                             values=(
-                                g.get('name'), 
-                                g.get('status'), 
-                                g.get('start_time'), 
+                                g.get('name'),
+                                g.get('status'),
+                                g.get('start_time'),
                                 g.get('bookmaker')
                             )
                         )
-                
+
                 self.after(0, update_tables)
-                
+
             except Exception as e:
                 def show_error():
                     self.live_tree.delete(*self.live_tree.get_children())
                     self.up_tree.delete(*self.up_tree.get_children())
-                    
+
                 self.after(0, show_error)
-            
+
             # Reagendar próxima atualização
             self.after(5000, self.update_games_tables)
-        
+
         threading.Thread(target=fetch, daemon=True).start()
 
     def create_admin_tab(self):
         """Cria a aba de administração."""
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text=i18n.t('admin_tab'))
-        
+
         # Configurações
         settings_label = ttk.Label(frame, text=i18n.t('settings'), font=('Arial', 13, 'bold'))
         settings_label.pack(pady=5)
-        
+
         self.settings_text = tk.Text(frame, height=6, width=100)
         self.settings_text.pack()
-        
+
         ttk.Button(frame, text=i18n.t('save_settings'), command=self.save_settings).pack(pady=2)
-        
+
         # Notificações
         notif_label = ttk.Label(frame, text=i18n.t('notifications'), font=('Arial', 13, 'bold'))
         notif_label.pack(pady=5)
-        
+
         self.notif_entry = tk.Entry(frame, width=60)
         self.notif_entry.pack()
-        
+
         ttk.Button(frame, text=i18n.t('send_test'), command=self.send_test_notification).pack(pady=2)
-        
+
         # Visão geral do banco de dados
         db_label = ttk.Label(frame, text=i18n.t('db'), font=('Arial', 13, 'bold'))
         db_label.pack(pady=5)
-        
+
         self.db_text = tk.Text(frame, height=6, width=100)
         self.db_text.pack()
-        
+
         ttk.Button(frame, text=i18n.t('update_now'), command=self.load_db_overview).pack(pady=2)
-        
+
         # Inserir aposta
         bet_label = ttk.Label(frame, text=i18n.t('insert_bet'), font=('Arial', 13, 'bold'))
         bet_label.pack(pady=5)
-        
+
         # Campos da aposta
         bet_frame = ttk.Frame(frame)
         bet_frame.pack(pady=5)
-        
+
         self.bet_event = tk.Entry(bet_frame, width=20)
         self.bet_event.pack(side='left', padx=2)
-        
+
         self.bet_market = tk.Entry(bet_frame, width=10)
         self.bet_market.pack(side='left', padx=2)
-        
+
         self.bet_selection = tk.Entry(bet_frame, width=10)
         self.bet_selection.pack(side='left', padx=2)
-        
+
         self.bet_odd = tk.Entry(bet_frame, width=8)
         self.bet_odd.pack(side='left', padx=2)
-        
+
         self.bet_bookmaker = tk.Entry(bet_frame, width=12)
         self.bet_bookmaker.pack(side='left', padx=2)
-        
+
         ttk.Button(bet_frame, text=i18n.t('insert_bet'), command=self.insert_bet).pack(side='left', padx=2)
-        
+
         self.bet_status = tk.Label(frame, text='', fg='green')
         self.bet_status.pack(pady=2)
-        
+
         # Carregar dados iniciais
         self.load_settings()
         self.load_db_overview()
@@ -377,7 +392,7 @@ class SurebetsApp(tk.Tk):
         if not msg:
             messagebox.showwarning(i18n.t('error'), i18n.t('fill_all'))
             return
-            
+
         try:
             requests.post(f'{API_BASE}/admin/test-notification', json={'message': msg})
             messagebox.showinfo(i18n.t('notifications'), i18n.t('success_bet'))
@@ -401,11 +416,11 @@ class SurebetsApp(tk.Tk):
         selection = self.bet_selection.get()
         odd = self.bet_odd.get()
         bookmaker = self.bet_bookmaker.get()
-        
+
         if not all([event, market, selection, odd, bookmaker]):
             self.bet_status.config(text=i18n.t('fill_all'), fg='red')
             return
-            
+
         try:
             odd = float(odd)
             if odd < 1.01:
@@ -414,7 +429,7 @@ class SurebetsApp(tk.Tk):
         except Exception:
             self.bet_status.config(text=i18n.t('invalid_odd'), fg='red')
             return
-            
+
         try:
             resp = requests.post(f'{API_BASE}/admin/insert-bet', json={
                 'event': event,
@@ -423,7 +438,7 @@ class SurebetsApp(tk.Tk):
                 'odd': odd,
                 'bookmaker': bookmaker
             })
-            
+
             if resp.status_code == 200:
                 self.bet_status.config(text=i18n.t('success_bet'), fg='green')
                 # Limpar campos
@@ -434,7 +449,7 @@ class SurebetsApp(tk.Tk):
                 self.bet_bookmaker.delete(0, tk.END)
             else:
                 self.bet_status.config(text=i18n.t('error'), fg='red')
-                
+
         except Exception:
             self.bet_status.config(text=i18n.t('error'), fg='red')
 
@@ -442,13 +457,13 @@ class SurebetsApp(tk.Tk):
         """Cria a aba de gráficos."""
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Gráficos')
-        
+
         # Gráfico de evolução de odds
         odds_label = ttk.Label(frame, text='Evolução das Odds', font=('Arial', 13, 'bold'))
         odds_label.pack(pady=5)
-        
+
         odds_fig, odds_ax = plt.subplots(figsize=(6, 3))
-        
+
         try:
             odds_data = requests.get(f'{API_BASE}/odds-history').json()
             for event in odds_data:
@@ -459,17 +474,17 @@ class SurebetsApp(tk.Tk):
             odds_ax.legend()
         except Exception as e:
             odds_ax.text(0.5, 0.5, f'Erro ao carregar dados: {e}', ha='center')
-            
+
         canvas1 = FigureCanvasTkAgg(odds_fig, master=frame)
         canvas1.draw()
         canvas1.get_tk_widget().pack(pady=10)
-        
+
         # Gráfico de distribuição de oportunidades
         dist_label = ttk.Label(frame, text='Distribuição de Oportunidades', font=('Arial', 13, 'bold'))
         dist_label.pack(pady=5)
-        
+
         dist_fig, dist_ax = plt.subplots(figsize=(6, 3))
-        
+
         try:
             dist_data = requests.get(f'{API_BASE}/opportunity-distribution').json()
             labels = list(dist_data.keys())
@@ -478,7 +493,7 @@ class SurebetsApp(tk.Tk):
             dist_ax.set_title('Distribuição de Oportunidades por Esporte')
         except Exception as e:
             dist_ax.text(0.5, 0.5, f'Erro ao carregar dados: {e}', ha='center')
-            
+
         canvas2 = FigureCanvasTkAgg(dist_fig, master=frame)
         canvas2.draw()
         canvas2.get_tk_widget().pack(pady=10)
@@ -502,18 +517,18 @@ if __name__ == '__main__':
     backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend', 'apps', 'dashboard.py')
     backend_path = os.path.abspath(backend_path)
     python_exe = sys.executable
-    
+
     try:
         subprocess.Popen([python_exe, backend_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
-        print(f'Não foi possível iniciar o backend automaticamente: {e}')
-    
+        logging.error(f'Não foi possível iniciar o backend automaticamente: {e}')
+
     # Aguardar o backend responder
-    print('Aguardando backend unificado iniciar...')
+    logging.info('Aguardando backend unificado iniciar...')
     if not wait_backend_ready(f'{API_BASE}/games/live'):
-        print('Backend unificado não respondeu a tempo. Fechando...')
+        logging.error('Backend unificado não respondeu a tempo. Fechando...')
         sys.exit(1)
-    
-    print('Backend unificado iniciado com sucesso!')
+
+    logging.info('Backend unificado iniciado com sucesso!')
     app = SurebetsApp()
     app.mainloop()

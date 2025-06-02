@@ -10,6 +10,7 @@ import threading
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from unittest.mock import patch
+import logging
 
 from database.database import get_db
 
@@ -54,7 +55,7 @@ class TestDatabasePerformance:
         # Validar performance
         for batch_size, metrics in results.items():
             assert metrics['throughput'] > 100  # Mínimo 100 registros/segundo
-            print(f"Batch {batch_size}: {metrics['elapsed_ms']:.2f}ms, {metrics['throughput']:.2f} records/sec")
+            logging.info(f"Batch {batch_size}: {metrics['elapsed_ms']:.2f}ms, {metrics['throughput']:.2f} records/sec")
         
         memory_usage_mb = memory_profiler.get_memory_usage_mb()
         assert memory_usage_mb < 100  # Não deve usar mais que 100MB
@@ -108,7 +109,7 @@ class TestDatabasePerformance:
         assert max_time < 200  # Tempo máximo < 200ms
         assert len(results) > 0
         
-        print(f"Complex query: avg={avg_time:.2f}ms, min={min_time:.2f}ms, max={max_time:.2f}ms")
+        logging.info(f"Complex query: avg={avg_time:.2f}ms, min={min_time:.2f}ms, max={max_time:.2f}ms")
     
     @pytest.mark.performance
     def test_concurrent_read_performance(self, threading_database):
@@ -164,7 +165,7 @@ class TestDatabasePerformance:
         assert avg_total_time < 1000  # Tempo médio < 1 segundo
         assert max_total_time < 2000  # Tempo máximo < 2 segundos
         
-        print(f"Concurrent reads: {num_workers} workers, avg={avg_total_time:.2f}ms, max={max_total_time:.2f}ms")
+        logging.info(f"Concurrent reads: {num_workers} workers, avg={avg_total_time:.2f}ms, max={max_total_time:.2f}ms")
     
     @pytest.mark.performance
     def test_mixed_workload_performance(self, threading_database):
@@ -209,7 +210,7 @@ class TestDatabasePerformance:
         assert avg_read_time < 1000  # Leituras < 1 segundo
         assert avg_write_time < 500   # Escritas < 500ms
         
-        print(f"Mixed workload: reads={avg_read_time:.2f}ms, writes={avg_write_time:.2f}ms")
+        logging.info(f"Mixed workload: reads={avg_read_time:.2f}ms, writes={avg_write_time:.2f}ms")
 
 
 class TestArbitragePerformance:
@@ -273,7 +274,7 @@ class TestArbitragePerformance:
         assert avg_detection_time < 50   # Detecção média < 50ms
         assert max_detection_time < 100  # Detecção máxima < 100ms
         
-        print(f"Arbitrage detection: avg={avg_detection_time:.2f}ms, max={max_detection_time:.2f}ms")
+        logging.info(f"Arbitrage detection: avg={avg_detection_time:.2f}ms, max={max_detection_time:.2f}ms")
     
     @pytest.mark.performance
     def test_stake_calculation_performance(self, populated_database, benchmark_timer):
@@ -325,7 +326,7 @@ class TestArbitragePerformance:
             avg_calc_time = sum(calculation_times) / len(calculation_times)
             assert avg_calc_time < 1  # Cálculo < 1ms por oportunidade
             
-            print(f"Stake calculation: avg={avg_calc_time:.3f}ms per opportunity")
+            logging.info(f"Stake calculation: avg={avg_calc_time:.3f}ms per opportunity")
 
 
 class TestScalabilityTests:
@@ -337,7 +338,7 @@ class TestScalabilityTests:
         db = clean_database
         
         # Inserir dados em massa
-        print("Inserindo dados em massa...")
+        logging.info("Inserindo dados em massa...")
         
         # Bookmakers
         bookmaker_data = [(f'Bookmaker {i}', f'https://api{i}.com', True) for i in range(100)]
@@ -359,7 +360,7 @@ class TestScalabilityTests:
         market_id = db.insert('markets', {'name': 'Test Market', 'slug': 'test-market', 'is_active': True})
         
         # Events (10,000 eventos)
-        print("Inserindo 10,000 eventos...")
+        logging.info("Inserindo 10,000 eventos...")
         event_data = [
             (f'EXT_{i}', random.randint(1, 50), f'Home {i}', f'Away {i}', 
              '2025-06-01 15:00:00', 'upcoming', True)
@@ -374,7 +375,7 @@ class TestScalabilityTests:
         benchmark_timer.stop()
         
         insert_time = benchmark_timer.elapsed_ms()
-        print(f"Inserted 10,000 events in {insert_time:.2f}ms")
+        logging.info(f"Inserted 10,000 events in {insert_time:.2f}ms")
         
         # Testar queries em dataset grande
         benchmark_timer.start()
@@ -398,7 +399,7 @@ class TestScalabilityTests:
         assert len(joined_data) == 1000
         assert join_time < 200  # JOIN deve ser razoavelmente rápido
         
-        print(f"Large dataset: count={count_time:.2f}ms, join={join_time:.2f}ms")
+        logging.info(f"Large dataset: count={count_time:.2f}ms, join={join_time:.2f}ms")
     
     @pytest.mark.performance
     def test_concurrent_stress_test(self, threading_database):
@@ -436,7 +437,7 @@ class TestScalabilityTests:
                     
                 except Exception as e:
                     errors += 1
-                    print(f"Worker {worker_id} error: {e}")
+                    logging.info(f"Worker {worker_id} error: {e}")
             
             return {'worker_id': worker_id, 'success': success, 'errors': errors}
         
@@ -467,5 +468,4 @@ class TestScalabilityTests:
         assert error_rate < 5  # Taxa de erro < 5%
         assert throughput > 100  # Throughput > 100 ops/sec
         
-        print(f"Stress test: {num_workers} workers, {total_operations} ops, "
-              f"{error_rate:.2f}% errors, {throughput:.2f} ops/sec")
+        logging.info(f"Stress test: {num_workers} workers, {total_operations} ops, {error_rate:.2f}% errors, {throughput:.2f} ops/sec")

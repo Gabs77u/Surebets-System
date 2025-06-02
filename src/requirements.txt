@@ -13,6 +13,7 @@ matplotlib==3.8.4
 fastapi==0.110.0
 flask-jwt-extended
 werkzeug
+websocket-client==1.8.0
 
 # Database (SQLite - built into Python)
 # No additional dependencies needed for SQLite

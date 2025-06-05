@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from typing import List
 import requests
-from config import settings
+from config.config_loader import CONFIG
 import asyncio
 
 app = FastAPI()
@@ -26,8 +26,8 @@ async def send_notification(message: str):
         await connection.send_text(message)
 
 # --- Integração com Telegram ---
-TELEGRAM_BOT_TOKEN = settings.TELEGRAM_BOT_TOKEN
-TELEGRAM_CHAT_ID = settings.TELEGRAM_CHAT_ID
+TELEGRAM_BOT_TOKEN = CONFIG['services']['notification']['provider'] == 'email' and CONFIG['services']['notification'].get('telegram_bot_token', '') or ''
+TELEGRAM_CHAT_ID = CONFIG['services']['notification'].get('telegram_chat_id', '')
 
 def send_telegram_notification(message: str):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -35,9 +35,9 @@ def send_telegram_notification(message: str):
     requests.post(url, data=data)
 
 # --- Integração com WhatsApp (usando API externa como UltraMsg, Z-API, etc) ---
-WHATSAPP_API_URL = settings.WHATSAPP_API_URL
-WHATSAPP_TOKEN = settings.WHATSAPP_TOKEN
-WHATSAPP_PHONE = settings.WHATSAPP_PHONE
+WHATSAPP_API_URL = CONFIG['services']['notification'].get('whatsapp_api_url', '')
+WHATSAPP_TOKEN = CONFIG['services']['notification'].get('whatsapp_token', '')
+WHATSAPP_PHONE = CONFIG['services']['notification'].get('whatsapp_phone', '')
 
 def send_whatsapp_notification(message: str):
     # Exemplo para UltraMsg

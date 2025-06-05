@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 import itertools
+from config.config_loader import CONFIG
 
 class SurebetDetector:
     """
@@ -32,6 +33,7 @@ class SurebetDetector:
             ...
         ]
         """
+        MIN_PROFIT_PERCENT = CONFIG['services']['arbitrage']['min_profit_percent']
         surebets = []
         for event in events:
             selections = event['selections']
@@ -50,11 +52,12 @@ class SurebetDetector:
                 arb_index = SurebetDetector.calculate_arbitrage(odds)
                 if arb_index < 1:
                     profit_percent = (1-arb_index)*100
-                    surebets.append({
-                        'event_id': event['event_id'],
-                        'market': event['market'],
-                        'selections': combo,
-                        'arbitrage_index': arb_index,
-                        'profit_percent': profit_percent
-                    })
+                    if profit_percent >= MIN_PROFIT_PERCENT:
+                        surebets.append({
+                            'event_id': event['event_id'],
+                            'market': event['market'],
+                            'selections': combo,
+                            'arbitrage_index': arb_index,
+                            'profit_percent': profit_percent
+                        })
         return surebets

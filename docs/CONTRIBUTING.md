@@ -1,5 +1,7 @@
 # 🤝 Contributing Guidelines - Surebets System
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## Como Contribuir
 
 1. **Fork** o repositório

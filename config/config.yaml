@@ -1,0 +1,131 @@
+# Configuração principal do Surebets-System
+# Personalize conforme necessário para cada ambiente (dev, staging, prod)
+
+project:
+  name: Surebets-System
+  version: 1.0.0
+  environment: dev
+  debug: true
+  maintenance_mode: false
+  banner: "Bem-vindo ao Surebets!"
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+  cors_origins:
+    - "*"
+  max_upload_size_mb: 20
+  enable_https: false
+  custom_headers:
+    X-Frame-Options: DENY
+
+logging:
+  level: INFO
+  file: logs/surebets.log
+  rotation: 10MB
+  retention: 7 days
+  error_file: logs/error.log
+  security_file: logs/security.log
+  external:
+    sentry_dsn: ""
+
+security:
+  secret_key: "CHANGE_ME"
+  jwt_algorithm: HS256
+  jwt_expiration_minutes: 60
+  allowed_hosts:
+    - "localhost"
+    - "127.0.0.1"
+  csrf_enabled: true
+  rate_limit_per_minute: 100
+  brute_force_protection: true
+  hsts_enabled: false
+  blocked_ips: []
+  admin_password_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+# Configuração do banco de dados
+postgres:
+  host: localhost
+  port: 5432
+  user: surebets_user
+  password: surebets_pass
+  dbname: surebets_db
+  pool_size: 10
+  backup:
+    enabled: true
+    path: backups/
+    schedule: "0 3 * * *"
+
+redis:
+  url: redis://localhost:6379/0
+  cache_timeout: 60
+
+# Configuração de serviços externos
+services:
+  notification:
+    enabled: true
+    provider: email
+    email_from: "noreply@surebets.com"
+    smtp_server: smtp.surebets.com
+    smtp_port: 587
+    smtp_user: "smtp_user"
+    smtp_password: "smtp_pass"
+    telegram_bot_token: ""
+    telegram_chat_id: ""
+    whatsapp_api_url: ""
+    whatsapp_token: ""
+    whatsapp_phone: ""
+  arbitrage:
+    max_parallel_tasks: 5
+    min_profit_percent: 1.5
+    scan_interval_seconds: 30
+    allowed_sports:
+      - soccer
+      - tennis
+      - basketball
+    odds_min: 1.01
+    odds_max: 1000
+    simulation_mode: false
+
+# Configurações do dashboard
+ui:
+  theme: dark
+  language: pt-br
+  items_per_page: 20
+  auto_refresh_seconds: 60
+  show_banners: true
+
+users:
+  password_policy:
+    min_length: 8
+    require_special: true
+    require_numbers: true
+    lockout_after_attempts: 5
+  roles:
+    admin:
+      can_configure: true
+      can_manage_users: true
+    operator:
+      can_configure: false
+      can_manage_users: false
+
+# Parâmetros customizáveis
+custom:
+  max_bet_value: 1000
+  min_bet_value: 10
+  enable_test_mode: false
+  plugin_paths: []
+  event_hooks:
+    on_bet_placed: ""
+    on_surebet_found: ""
+
+devops:
+  docker:
+    enabled: true
+    compose_file: docker/docker-compose.yml
+  healthcheck:
+    enabled: true
+    endpoint: /health
+
+# Adicione outras seções conforme necessário

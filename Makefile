@@ -72,10 +72,6 @@ dev-admin: ## 🔐 Executa apenas a API administrativa
 	@echo "$(BLUE)🔐 Iniciando API administrativa...$(NC)"
 	@export FLASK_ENV=development && $(PYTHON) -m backend.apps.admin_api
 
-dev-ui: ## 🖥️ Executa interface desktop
-	@echo "$(BLUE)🖥️ Iniciando interface desktop...$(NC)"
-	@$(PYTHON) frontend/tinker_ui.py
-
 # =============================================================================
 # QUALIDADE DE CÓDIGO
 # =============================================================================

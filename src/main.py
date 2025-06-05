@@ -3,6 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 import logging
+from config.config_loader import CONFIG
 
 # Caminhos relativos robustos
 BASE_DIR = Path(__file__).parent.resolve()
@@ -91,12 +92,6 @@ def wait_service_ready(url, timeout=30):
     return False
 
 
-def run_tkinter_frontend():
-    frontend_path = BASE_DIR.parent / "frontend" / "tinker_ui.py"
-    env = os.environ.copy()
-    return subprocess.Popen([sys.executable, str(frontend_path)], env=env)
-
-
 if __name__ == "__main__":
     logging.info("Iniciando Surebets System (Versão Unificada)...")
     logging.info("Se o antivírus acusar falso positivo, adicione uma exceção para este executável.")
@@ -117,8 +112,6 @@ if __name__ == "__main__":
         for p in processes:
             p.terminate()
         sys.exit(1)
-    frontend_proc = run_tkinter_frontend()
-    processes.append(frontend_proc)
     try:
         input("Pressione Enter para encerrar...")
     finally:

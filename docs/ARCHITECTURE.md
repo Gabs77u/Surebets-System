@@ -1,5 +1,7 @@
 # 🏗️ Architecture Guide - Surebets System
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## Visão Geral
 
 O sistema Surebets foi projetado com arquitetura modular enterprise-ready, separação de responsabilidades, segurança avançada e foco em escalabilidade, testabilidade e facilidade de manutenção. A arquitetura implementa múltiplas camadas de segurança, validação rigorosa e sistema de autenticação JWT robusto.

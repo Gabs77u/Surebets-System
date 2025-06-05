@@ -1,6 +1,9 @@
 import requests
 from typing import Any, Dict, Optional
 
+# [UTILITÁRIO INTERNO] Este módulo deve ser usado apenas via backend/apps/integration.py.
+# Não expor diretamente para endpoints ou outros módulos.
+
 class SportRadarAPI:
     def __init__(self, betting_house: str):
         self.betting_house = betting_house

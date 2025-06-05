@@ -1,5 +1,7 @@
 # 📊 Sistema de Surebets - Documentação Completa de Desenvolvimento
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## 🎯 Visão Geral do Projeto
 
 O Sistema de Surebets é uma aplicação profissional para detecção e análise de oportunidades de arbitragem esportiva. O sistema foi completamente refatorado e reestruturado para atender padrões de produção empresarial com **segurança enterprise implementada**.
@@ -32,7 +34,6 @@ Surebets-System/
 │       ├── security/          # ✅ Testes de segurança
 │       └── performance/       # Testes de performance
 ├── frontend/                   # Interfaces de usuário
-│   └── tinker_ui.py           # Interface Tkinter unificada
 ├── config/                     # Arquivos de configuração
 │   ├── settings.py            # Configurações centralizadas
 │   └── security.py            # ✅ Configurações de segurança

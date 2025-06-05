@@ -72,15 +72,14 @@
 - **Utilitários centrais em `backend/core/`** (auth, i18n, validation)
 - **Serviços de negócio em `backend/services/`**
 - **Banco de dados em `backend/database/`** (SQLite configurável)
-- **Interface desktop Tkinter em `frontend/tinker_ui.py`**
 - **Configurações centralizadas em `config/settings.py`**
 - **Docker e scripts de automação em `docker/`**
 
 ### 📚 Documentação Profissional Expandida
-- **[JWT Frontend Integration Guide](docs/JWT_FRONTEND_INTEGRACAO.md)**: Integração completa com React/Vue
-- **[Security Guide](docs/SECURITY.md)**: Documentação abrangente de segurança
-- **[API Documentation](docs/API.md)**: Endpoints atualizados com validação
-- **[Architecture Guide](docs/ARCHITECTURE.md)**: Arquitetura de segurança detalhada
+- **[JWT Frontend Integration Guide](JWT_FRONTEND_INTEGRACAO.md)**: Integração completa com React/Vue
+- **[Security Guide](SECURITY.md)**: Documentação abrangente de segurança
+- **[API Documentation](API.md)**: Endpoints atualizados com validação
+- **[Architecture Guide](ARCHITECTURE.md)**: Arquitetura de segurança detalhada
 
 ### 🔧 Melhorias de Produção
 - **Configuração por Ambiente**: Development vs Production
@@ -125,7 +124,6 @@ O Sistema de Surebets é uma aplicação Python enterprise-ready que detecta aut
 
 ### 📊 Interface e Visualização
 - **Dashboard Web**: Interface Flask moderna e responsiva
-- **Interface Desktop**: Aplicação Tkinter nativa
 - **Gráficos Interativos**: Visualizações de dados com charts dinâmicos
 - **Relatórios**: Exportação de dados e relatórios detalhados
 
@@ -158,8 +156,6 @@ O Sistema de Surebets é uma aplicação Python enterprise-ready que detecta aut
 │       ├── integration/       # Testes de integração JWT
 │       ├── security/          # Testes de segurança
 │       └── performance/       # Testes de performance
-├── 🖥️ frontend/             # Interfaces de Usuário
-│   └── tinker_ui.py        # Interface Tkinter
 ├── ⚙️ config/               # Configurações
 │   └── settings.py         # Settings Centralizados
 ├── 🐳 docker/               # Container Setup
@@ -441,60 +437,15 @@ curl -X POST https://yourdomain.com/api/auth/login \
 - Análise de segurança com Bandit
 - Documentação atualizada
 
-## 📊 Status do Projeto
+## 📋 Status, Roadmap e Checklist
 
-### ✅ Funcionalidades Implementadas
+Toda a evolução do projeto, conquistas, status de produção e próximos passos estão centralizados em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
 
-#### Segurança e Autenticação
-- [x] **Sistema JWT Avançado**: Access/refresh tokens, blacklist, roles
-- [x] **Validação Pydantic**: Schemas rigorosos em todos os endpoints
-- [x] **Proteções Web**: XSS, SQL injection, CSRF, rate limiting
-- [x] **Headers de Segurança**: Implementação completa OWASP
-- [x] **Logging de Segurança**: Eventos estruturados e auditoria
-- [x] **Testes de Segurança**: Penetração, fuzzing, validação
-
-#### Arquitetura e Core
-- [x] **Arquitetura Modular Unificada**: Apps, core, services, database
-- [x] **Dashboard Web Consolidado**: Interface Flask profissional
-- [x] **API Administrativa Segura**: Endpoints protegidos e validados
-- [x] **Sistema de Adaptadores Extensível**: Suporte a múltiplas casas
-- [x] **Internacionalização Centralizada**: PT-BR e EN
-- [x] **Interface Desktop Tkinter**: Integração com backend
-
-#### Qualidade e Testes
-- [x] **Testes Automatizados**: Unitários, integração, performance, segurança
-- [x] **Configuração Centralizada**: settings.py e variáveis de ambiente
-- [x] **CI/CD Ready**: Docker, health checks, métricas
-
-### 🚧 Em Desenvolvimento
-
-- [ ] **Cache Redis Avançado**: Layer de cache para performance otimizada
-- [ ] **Logging Profissional**: Substituição completa de prints por logs estruturados
-- [ ] **Monitoring Avançado**: Métricas detalhadas e alertas inteligentes
-- [ ] **2FA Implementation**: Autenticação de dois fatores
-- [ ] **API Rate Limiting Dinâmico**: Ajuste automático baseado em uso
-
-### 🎯 Roadmap
-
-1. **Q1 2025**: Sistema de monitoring, logging e observabilidade completos
-2. **Q2 2025**: Otimizações de performance, cache Redis, retry logic
-3. **Q3 2025**: Deploy automatizado, CI/CD completo, backup e disaster recovery
-4. **Q4 2025**: Machine learning para detecção de arbitragem, mobile app
-
-## 📞 Suporte
-
-### 🆘 Precisa de Ajuda?
-
-- **Issues**: [GitHub Issues](https://github.com/Gabs77u/Surebets-System/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Gabs77u/surebets-system/discussions)
-- **Email**: gabrielaraujoseven@gmail.com
-- **Security**: gabrielaraujoseven@gmail.com (para vulnerabilidades)
-
-### 📚 Recursos Adicionais
-
-- **Stack Overflow**: Tag `surebets-system`
-- **Discord**: Comunidade de desenvolvedores
-- **Documentation**: Documentação sempre atualizada
+Consulte o checklist para:
+- Status atual
+- Roadmap detalhado
+- Métricas e conquistas
+- Próximos passos
 
 ---
 

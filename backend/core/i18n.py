@@ -7,6 +7,7 @@ Remove redundâncias entre diferentes partes do sistema.
 
 from typing import Dict, List, Optional
 import os
+from config.config_loader import CONFIG
 
 # Dicionário centralizado com todas as traduções do sistema
 LANGUAGES = {
@@ -149,7 +150,7 @@ LANGUAGES = {
 }
 
 # Idioma padrão do sistema
-DEFAULT_LANGUAGE = os.getenv('SYSTEM_LANGUAGE', 'pt')
+DEFAULT_LANGUAGE = CONFIG['ui'].get('language', 'pt')
 
 
 def get_text(key: str, lang: Optional[str] = None) -> str:

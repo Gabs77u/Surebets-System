@@ -1,5 +1,7 @@
 # 🚀 Deployment Guide - Surebets System v3.0.0 Security Enterprise
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## Introdução
 
 Este guia cobre o processo de deploy do sistema Surebets em ambientes de desenvolvimento, staging e produção, incluindo dicas de configuração, variáveis de ambiente e melhores práticas.
@@ -175,34 +177,6 @@ server {
 - Backup automático
 - Monitoramento ativo
 - Zero debug/verbose logging
-
----
-
-## 🔒 Checklist de Segurança Pré-Deploy
-
-### ✅ Autenticação
-- [ ] Chaves JWT geradas com `secrets.token_urlsafe(32)`
-- [ ] Redis configurado e acessível
-- [ ] Expiração de tokens configurada (15min/30dias)
-- [ ] Blacklist de tokens funcionando
-
-### ✅ Headers e Proteções
-- [ ] `SECURITY_HEADERS_ENABLED=true`
-- [ ] CSP, HSTS, X-Frame-Options ativos
-- [ ] Rate limiting configurado por ambiente
-- [ ] Sanitização automática ativa
-
-### ✅ Infraestrutura
-- [ ] HTTPS configurado com certificados válidos
-- [ ] Nginx/reverse proxy configurado
-- [ ] Firewall bloqueando portas desnecessárias
-- [ ] Redis isolado e protegido
-
-### ✅ Monitoramento
-- [ ] Endpoint `/health` respondendo
-- [ ] Logs estruturados configurados
-- [ ] Audit trail de segurança ativo
-- [ ] Alertas para tentativas de ataque
 
 ---
 

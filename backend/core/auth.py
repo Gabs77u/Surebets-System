@@ -5,6 +5,7 @@ import redis
 import os
 import logging
 from typing import Dict, List, Any, Optional, Union
+from config.config_loader import CONFIG
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -45,9 +46,14 @@ ROLE_PERMISSIONS = {
     }
 }
 
+# Exemplo de uso de configuração:
+REDIS_URL = CONFIG.get('redis', {}).get('url', 'redis://localhost:6379/0')
+
 class TokenBlacklist:
     def __init__(self, redis_url=None):
         self.redis = None
+        if redis_url is None:
+            redis_url = REDIS_URL
         if redis_url:
             try:
                 self.redis = redis.from_url(redis_url)
@@ -131,16 +137,16 @@ class AuthManager:
             self.init_app(app)
 
     def init_app(self, app):
-        # Configuração de JWT
-        app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-dev-secret')
-        app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES_MINUTES', '60')))
-        app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES_DAYS', '30')))
-        
+        # NÃO sobrescrever app.config['JWT_SECRET_KEY'] aqui!
+        # Apenas garantir que os outros parâmetros estejam presentes
+        if 'JWT_ACCESS_TOKEN_EXPIRES' not in app.config:
+            app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES_MINUTES', '60')))
+        if 'JWT_REFRESH_TOKEN_EXPIRES' not in app.config:
+            app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES_DAYS', '30')))
         # Configurar integração com frontend
         app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
         app.config['JWT_COOKIE_SECURE'] = os.getenv('ENVIRONMENT') == 'production'
         app.config['JWT_COOKIE_CSRF_PROTECT'] = True
-        
         self.jwt = JWTManager(app)
         
         # Configurar callback para checar tokens na blacklist
@@ -234,4 +240,24 @@ class AuthManager:
             'size': self.blacklist.get_blacklist_size(),
             'using_redis': self.blacklist.redis is not None,
             'timestamp': datetime.now().isoformat()
+        }
+    
+    def get_user_tokens(self, username):
+        """Retorna lista de tokens ativos/revogados para um usuário (mock para demo/testes)."""
+        # Em produção, isso deveria consultar um storage real de tokens emitidos/blacklistados        # Mock: retorna apenas tokens da blacklist em memória (apenas para desenvolvimento)
+        active = []
+        revoked = []
+        if hasattr(self.blacklist, '_blacklist'):
+            now = datetime.timestamp(datetime.now())
+            for jti, exp in self.blacklist._blacklist.items():
+                # Aqui não temos username real, pois a blacklist só armazena jti e exp
+                # Em produção, seria necessário um storage real com relação jti <-> usuário
+                if exp > now:
+                    revoked.append(jti)
+        return {
+            'username': username,
+            'active_tokens': active,
+            'revoked_tokens': revoked,
+            'active_count': len(active),
+            'revoked_count': len(revoked)
         }

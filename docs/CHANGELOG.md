@@ -1,5 +1,7 @@
 # 📅 Changelog - Sistema de Surebets
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -64,16 +66,16 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### 📚 DOCUMENTAÇÃO DE SEGURANÇA (NOVA)
 
 #### Novos Documentos
-- **[JWT Frontend Integration Guide](docs/JWT_FRONTEND_INTEGRACAO.md)**:
+- **[JWT Frontend Integration Guide](JWT_FRONTEND_INTEGRACAO.md)**:
   - Integração completa com React, Vue, Angular
   - Exemplos de código para autenticação
   - Boas práticas de segurança frontend
-- **[Security Guide](docs/SECURITY.md)**:
+- **[Security Guide](SECURITY.md)**:
   - Documentação abrangente de segurança
   - Checklist completo OWASP Top 10
   - Procedimentos de resposta a incidentes
-- **[API Documentation](docs/API.md)**: Endpoints atualizados com validação
-- **[Architecture Guide](docs/ARCHITECTURE.md)**: Arquitetura de segurança detalhada
+- **[API Documentation](API.md)**: Endpoints atualizados com validação
+- **[Architecture Guide](ARCHITECTURE.md)**: Arquitetura de segurança detalhada
 
 #### Documentação Atualizada
 - **README.md**: Badges de segurança, seção de proteções
@@ -138,10 +140,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Suporte a múltiplas casas de apostas
   - Implementações mock para desenvolvimento
   - Arquitetura plug-and-play
-- **Interface Desktop Atualizada** (`frontend/tinker_ui.py`)
-  - Integração com sistema i18n centralizado
-  - Conexão com APIs unificadas
-  - Interface moderna e intuitiva
 - **Configurações Centralizadas** (`config/settings.py`)
   - Configurações para desenvolvimento, teste e produção
   - Variáveis de ambiente organizadas
@@ -187,6 +185,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - Diretórios de teste desorganizados
   - Cache directories temporários
 - **Legacy Code**: Remoção de código legado e não utilizado
+- **Interface Desktop Tkinter** (`frontend/tinker_ui.py`) removida. Todas as funções migradas para o dashboard web.
 
 ### 🔧 Corrigido
 - **Imports Quebrados**: Correção de todos os caminhos de import
@@ -219,7 +218,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### 🚀 Adicionado
 - Sistema básico de detecção de arbitragem
 - Interface web inicial com Flask
-- Interface desktop com Tkinter
 - Adaptadores básicos para casas de apostas
 - Sistema de notificações simples
 

@@ -1,5 +1,7 @@
 # 🔒 Security Guide - Surebets System
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## Visão Geral
 
 O sistema Surebets implementa um modelo de segurança abrangente e em camadas (Defense in Depth), com proteções contra as principais vulnerabilidades web listadas no OWASP Top 10. Este documento detalha todas as medidas de segurança implementadas e as melhores práticas para manter o sistema seguro.
@@ -568,6 +570,11 @@ semgrep --config=auto backend/
 - [x] **Containers com usuário não-root**
 - [x] **Backup automatizado**
 - [x] **SSL/TLS configurado**
+    - [x] Certificados autoassinados para testes
+    - [x] Pronto para Let's Encrypt em produção
+    - [x] Nginx como proxy reverso seguro
+    - [x] Redirecionamento HTTP para HTTPS
+    - [x] Configuração centralizada e documentada
 - [x] **Firewall ativo**
 
 ---

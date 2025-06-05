@@ -1,5 +1,7 @@
 # ⚡ Performance Guide - Surebets System
 
+> Para status, roadmap, conquistas e próximos passos, consulte o checklist consolidado em [CHECKLIST_PRODUCAO.md](CHECKLIST_PRODUCAO.md).
+
 ## Estratégias Gerais
 
 - Use cache Redis para consultas frequentes
@@ -41,10 +43,3 @@
 
 ---
 
-## Checklist de Performance
-
-- [x] Redis ativo em produção
-- [x] Queries otimizadas
-- [x] Paginação implementada
-- [x] Compressão gzip ativa
-- [x] Métricas expostas

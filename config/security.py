@@ -1,7 +1,8 @@
-import os
+bimport os
 from hashlib import sha256
+from config.config_loader import CONFIG
 
-SECRET_KEY = os.getenv("SECRET_KEY", "troque-esta-chave") # Mantido para compatibilidade, mas settings.py é a fonte primária
+SECRET_KEY = CONFIG['security']['secret_key']
 
 # Função utilitária para gerar hash seguro
 # TODO: Para hashing de senhas de usuário, considere usar algoritmos mais robustos e lentos

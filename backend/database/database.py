@@ -12,6 +12,8 @@ import threading
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Union
 from contextlib import contextmanager
+# Adicionar suporte a SQLite para testes
+import sqlite3
 
 # Configurar logging
 logging.basicConfig(
@@ -21,7 +23,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configurações do banco
-DATABASE_URL = os.getenv("POSTGRES_DATABASE_URL", "dbname=surebets user=postgres password=postgres host=localhost port=5432")
+DATABASE_URL = os.getenv("POSTGRES_DATABASE_URL")
+if not DATABASE_URL:
+    # Fallback para settings/config se não houver variável de ambiente
+    try:
+        from config.settings import DATABASE_URL as SETTINGS_DATABASE_URL
+        DATABASE_URL = SETTINGS_DATABASE_URL
+    except Exception:
+        DATABASE_URL = None
+if not DATABASE_URL:
+    # Valor padrão seguro para desenvolvimento local
+    DATABASE_URL = "postgresql://postgres:admin@localhost:5432/postgres"
+    logger.warning("POSTGRES_DATABASE_URL não definida. Usando valor padrão local: postgresql://postgres:admin@localhost:5432/postgres")
 
 class PostgresDatabaseManager:
     """
@@ -54,8 +67,9 @@ class PostgresDatabaseManager:
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT to_regclass('public.users')")
-            if cursor.fetchone()[0] is None:
+            cursor.execute("SELECT to_regclass('public.users') AS regclass")
+            result = cursor.fetchone()
+            if not result or result["regclass"] is None:
                 logger.info("🔨 Criando schema inicial do banco PostgreSQL...")
                 self._create_schema()
                 logger.info("✅ Schema criado com sucesso!")
@@ -66,8 +80,13 @@ class PostgresDatabaseManager:
     def _create_schema(self):
         schema_file = Path(__file__).parent / "schema_postgres.sql"
         if schema_file.exists():
-            with open(schema_file, 'r', encoding='utf-8') as f:
-                schema_sql = f.read()
+            try:
+                with open(schema_file, 'r', encoding='utf-8') as f:
+                    schema_sql = f.read()
+            except UnicodeDecodeError as e:
+                logger.warning(f"⚠️ Erro de encoding UTF-8: {e}. Tentando latin-1...")
+                with open(schema_file, 'r', encoding='latin-1', errors='replace') as f:
+                    schema_sql = f.read()
             conn = self._get_connection()
             with conn.cursor() as cursor:
                 cursor.execute(schema_sql)
@@ -207,8 +226,109 @@ class PostgresDatabaseManager:
             del self._local.connection
             logger.info("🔒 Conexão fechada")
 
-# Instância global
-pg_db = PostgresDatabaseManager()
+class DatabaseManager:
+    """
+    Gerenciador de banco SQLite para ambiente de testes.
+    """
+    _instance = None
+    _lock = threading.Lock()
 
-def get_pg_db() -> PostgresDatabaseManager:
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(DatabaseManager, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if hasattr(self, '_initialized'):
+            return
+        self._initialized = True
+        self._local = threading.local()
+        self._db_path = os.getenv('SQLITE_DATABASE_PATH', ':memory:')
+        self._initialize_database()
+        logger.info(f"✅ Database SQLite inicializado: {self._db_path}")
+
+    def _get_connection(self):
+        if not hasattr(self._local, 'connection'):
+            self._local.connection = sqlite3.connect(self._db_path)
+            self._local.connection.row_factory = sqlite3.Row
+        return self._local.connection
+
+    def _initialize_database(self):
+        pass  # Schema criado via fixture
+
+    def transaction(self):
+        # Mock para testes: contexto vazio
+        from contextlib import contextmanager
+        @contextmanager
+        def _noop():
+            yield
+        return _noop()
+
+    def fetch(self, query, params=None):
+        conn = self._get_connection()
+        cursor = conn.execute(query, params or ())
+        return [dict(row) for row in cursor.fetchall()]
+
+    def fetch_one(self, query, params=None):
+        conn = self._get_connection()
+        cursor = conn.execute(query, params or ())
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+    def execute(self, query, params=None):
+        conn = self._get_connection()
+        cursor = conn.execute(query, params or ())
+        conn.commit()
+        return cursor.rowcount
+
+    def execute_many(self, query, params_list):
+        conn = self._get_connection()
+        cursor = conn.executemany(query, params_list)
+        conn.commit()
+        return cursor.rowcount
+
+    def insert(self, table, data):
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['?' for _ in data])
+        values = list(data.values())
+        query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+        conn = self._get_connection()
+        cursor = conn.execute(query, values)
+        conn.commit()
+        return cursor.lastrowid
+
+    def update(self, table, data, where, where_params=()):
+        set_clause = ', '.join([f"{key} = ?" for key in data.keys()])
+        values = list(data.values()) + list(where_params)
+        query = f"UPDATE {table} SET {set_clause} WHERE {where}"
+        conn = self._get_connection()
+        cursor = conn.execute(query, values)
+        conn.commit()
+        return cursor.rowcount
+
+    def delete(self, table, where, where_params=()):
+        query = f"DELETE FROM {table} WHERE {where}"
+        conn = self._get_connection()
+        cursor = conn.execute(query, where_params)
+        conn.commit()
+        return cursor.rowcount
+
+    def close(self):
+        if hasattr(self._local, 'connection'):
+            self._local.connection.close()
+            del self._local.connection
+            logger.info("🔒 Conexão SQLite fechada")
+
+# Sempre usar PostgreSQL como backend
+try:
+    pg_db = PostgresDatabaseManager()
+except Exception as e:
+    import traceback
+    print(f"[ERRO BANCO] {e}")
+    traceback.print_exc()
+    pg_db = None
+
+def get_db():
     return pg_db

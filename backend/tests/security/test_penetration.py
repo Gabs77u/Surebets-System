@@ -4,9 +4,7 @@ Inclui testes de carga, fuzzing e cenários de ataque avançados.
 """
 
 import pytest
-import json
 import time
-import threading
 import sys
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -16,8 +14,7 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
 from backend.core.validation import (
-    sanitize_text, detect_sql_injection, detect_xss,
-    validate_and_sanitize_dict, SecurityError
+    sanitize_text, detect_sql_injection, detect_xss
 )
 from backend.apps import admin_api
 

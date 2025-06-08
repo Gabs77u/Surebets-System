@@ -5,102 +5,55 @@ Fixtures e configurações globais para todos os testes.
 """
 
 import pytest
-import tempfile
-import sqlite3
+import os
+from backend.database.database import get_db
 from pathlib import Path
-from unittest.mock import Mock, patch
-import logging
-
-# Importar módulos do sistema
-from database.database import DatabaseManager, get_db
 
 
 @pytest.fixture(scope="session")
-def test_database_path():
-    """Cria um banco temporário para testes."""
-    with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
-        yield f.name
-    Path(f.name).unlink(missing_ok=True)
+def test_database_url():
+    """Retorna a URL do banco PostgreSQL de teste."""
+    return os.getenv("POSTGRES_DATABASE_URL") or os.getenv("DATABASE_URL")
 
 
 @pytest.fixture(scope="function")
-def clean_database(test_database_path):
-    """Fixture que fornece um banco limpo para cada teste."""
-    # Configurar banco de teste ANTES de importar o DatabaseManager
-    import os
-    os.environ['SQLITE_DATABASE_PATH'] = test_database_path
-    
-    # Limpar cache do singleton para testes
-    DatabaseManager._instance = None
-    
-    # Criar instância limpa do banco
-    db = DatabaseManager()
-    
-    # Para testes de threading, usar WAL mode com shared cache
+def clean_database(test_database_url):
+    """Fixture que fornece um banco limpo para cada teste usando PostgreSQL."""
+    db = get_db()
     conn = db._get_connection()
-    conn.execute("PRAGMA journal_mode = WAL")
-    conn.execute("PRAGMA cache = shared")
-    
-    # Forçar criação do schema se necessário
-    schema_file = Path(__file__).parent.parent / "database" / "schema.sql"
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        tables = [row['tablename'] for row in cursor.fetchall()]
+        for table in tables:
+            cursor.execute(f'TRUNCATE TABLE "{table}" RESTART IDENTITY CASCADE')
+    conn.commit()
+    # Recriar schema se necessário
+    schema_file = Path(__file__).parent.parent / "database" / "schema_postgres.sql"
     if schema_file.exists():
         with open(schema_file, 'r', encoding='utf-8') as f:
             schema_sql = f.read()
-        
-        try:
-            # Verificar se tabelas já existem
-            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='events'")
-            if not cursor.fetchone():
-                conn.executescript(schema_sql)
-                conn.commit()
-        except Exception as e:
-            logging.info(f"Erro ao criar schema: {e}")
-            # Se falhou, tentar executar script completo novamente
-            conn.executescript(schema_sql)
-            conn.commit()
-    
+        with conn.cursor() as cursor:
+            cursor.execute(schema_sql)
+        conn.commit()
+    # Popular banco com dados fictícios
+    populate_file = Path(__file__).parent.parent / "database" / "populate.sql"
+    if populate_file.exists():
+        with open(populate_file, 'r', encoding='utf-8') as f:
+            populate_sql = f.read()
+        # Executa cada comando separadamente, ignorando linhas em branco
+        statements = [stmt.strip() for stmt in populate_sql.split(';') if stmt.strip()]
+        with conn.cursor() as cursor:
+            for stmt in statements:
+                cursor.execute(stmt)
+        conn.commit()
     yield db
-    
-    # Limpeza após teste
-    if hasattr(db, 'close'):
-        db.close()
-    
-    # Limpar variável de ambiente
-    if 'SQLITE_DATABASE_PATH' in os.environ:
-        del os.environ['SQLITE_DATABASE_PATH']
+    db.close()
 
 
 @pytest.fixture(scope="function")
 def populated_database(clean_database):
     """Fixture que fornece um banco com dados de teste."""
-    db = clean_database
-    
-    # Verificar se as tabelas foram criadas
-    conn = db._get_connection()
-    try:
-        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        tables = [row[0] for row in cursor.fetchall()]
-        logging.info(f"Tabelas disponíveis: {tables}")
-        
-        # Inserir dados de teste
-        populate_file = Path(__file__).parent.parent / "database" / "populate.sql"
-        if populate_file.exists():
-            with open(populate_file, 'r', encoding='utf-8') as f:
-                populate_sql = f.read()
-            
-            conn.executescript(populate_sql)
-            conn.commit()
-            
-            # Verificar se os dados foram inseridos
-            cursor = conn.execute("SELECT COUNT(*) as count FROM events")
-            event_count = cursor.fetchone()[0]
-            logging.info(f"Eventos inseridos: {event_count}")
-            
-    except Exception as e:
-        logging.info(f"Erro ao popular banco: {e}")
-        raise
-    
-    yield db
+    return clean_database
 
 
 @pytest.fixture
@@ -276,93 +229,6 @@ def memory_profiler():
             return usage / (1024 * 1024) if usage else None
     
     return MemoryProfiler()
-
-
-@pytest.fixture(scope="function")
-def threading_database(test_database_path):
-    """Fixture específica para testes de threading com conexão compartilhada."""
-    import os
-    import threading
-    
-    # Configurar banco de teste
-    os.environ['SQLITE_DATABASE_PATH'] = test_database_path
-    
-    # Limpar cache do singleton para testes
-    DatabaseManager._instance = None
-    
-    # Criar uma instância modificada para suportar threading
-    class ThreadSafeDatabaseManager(DatabaseManager):
-        def __init__(self):
-            """Inicializar com conexão única para threading."""
-            self._initialized = True
-            self._lock = threading.RLock()
-            
-            # Criar conexão única compartilhada
-            self._shared_connection = sqlite3.connect(
-                test_database_path,
-                timeout=30,
-                check_same_thread=False,
-                isolation_level=None
-            )
-            
-            # Configurar para uso compartilhado
-            self._shared_connection.row_factory = sqlite3.Row
-            self._shared_connection.execute("PRAGMA foreign_keys = ON")
-            self._shared_connection.execute("PRAGMA journal_mode = WAL")
-            self._shared_connection.execute("PRAGMA synchronous = NORMAL")
-            self._shared_connection.execute("PRAGMA cache_size = 10000")
-            self._shared_connection.execute("PRAGMA temp_store = memory")
-            
-        def _get_connection(self):
-            """Retornar sempre a mesma conexão para threading."""
-            return self._shared_connection
-            
-        def fetch(self, query: str, params=None):
-            """Thread-safe fetch."""
-            with self._lock:
-                return super().fetch(query, params)
-                
-        def execute(self, query: str, params=None):
-            """Thread-safe execute."""
-            with self._lock:
-                return super().execute(query, params)
-        
-        def close(self):
-            """Fechar conexão compartilhada."""
-            if hasattr(self, '_shared_connection'):
-                self._shared_connection.close()
-    
-    # Criar instância thread-safe
-    db = ThreadSafeDatabaseManager()
-    
-    # Criar schema
-    schema_file = Path(__file__).parent.parent / "database" / "schema.sql"
-    if schema_file.exists():
-        with open(schema_file, 'r', encoding='utf-8') as f:
-            schema_sql = f.read()
-        
-        conn = db._get_connection()
-        conn.executescript(schema_sql)
-        conn.commit()
-    
-    # Inserir dados de teste
-    populate_file = Path(__file__).parent.parent / "database" / "populate.sql"
-    if populate_file.exists():
-        with open(populate_file, 'r', encoding='utf-8') as f:
-            populate_sql = f.read()
-        
-        conn = db._get_connection()
-        conn.executescript(populate_sql)
-        conn.commit()
-    
-    yield db
-    
-    # Limpeza
-    db.close()
-    
-    # Limpar variável de ambiente
-    if 'SQLITE_DATABASE_PATH' in os.environ:
-        del os.environ['SQLITE_DATABASE_PATH']
 
 
 # Configurações globais do pytest

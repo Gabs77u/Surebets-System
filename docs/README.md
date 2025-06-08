@@ -71,7 +71,7 @@
 - **Apps principais em `backend/apps/`** (dashboard, admin_api, adapters)
 - **Utilitários centrais em `backend/core/`** (auth, i18n, validation)
 - **Serviços de negócio em `backend/services/`**
-- **Banco de dados em `backend/database/`** (SQLite configurável)
+- **Banco de dados em `backend/database/`** (PostgreSQL configurável)
 - **Configurações centralizadas em `config/settings.py`**
 - **Docker e scripts de automação em `docker/`**
 
@@ -201,11 +201,11 @@ docker-compose -f docker/docker-compose.yml down
 # Para reiniciar após alterações:
 docker-compose -f docker/docker-compose.yml restart
 
-# Para acessar o banco SQLite manualmente:
-docker exec -it <nome_do_container_backend> sqlite3 /app/data/surebets.db
+# Para acessar o banco PostgreSQL manualmente:
+docker exec -it <nome_do_container_db> psql -U <usuario> -d <database>
 
 # Para rodar migrações ou scripts utilitários:
-docker-compose -f docker/docker-compose.yml exec backend python backend/migrate_to_sqlite.py
+docker-compose -f docker/docker-compose.yml exec backend python backend/database/database.py
 
 # Dica: Para ambiente de produção, utilize o arquivo docker-compose.prod.yml 
 # e configure as variáveis de ambiente de segurança adequadas.
@@ -242,7 +242,7 @@ python -m backend.apps.admin_api
 # Configurações básicas
 FLASK_ENV=production
 SECRET_KEY=your-secret-key-here
-DATABASE_URL=sqlite:///surebets.db
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/surebets
 
 # JWT Security (OBRIGATÓRIO)
 JWT_SECRET_KEY=your-256-bit-secret-key

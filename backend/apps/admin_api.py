@@ -9,31 +9,25 @@ from flask import Flask, jsonify, request, make_response, current_app
 from functools import wraps
 import os
 import logging
-import secrets
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Importar módulos unificados
 from config.config_loader import CONFIG
-from config.settings import (
-    APP_NAME, DEBUG, PORT, CACHE_TIMEOUT, ALLOWED_HOSTS, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WHATSAPP_API_URL, MOCK_BOOKMAKER_DATA
-)
 import config.settings as settings
 from backend.services.notification import notify_all
 from backend.apps.integration import BookmakerIntegration
 from backend.core.i18n import get_text
-from backend.database.database_postgres import PostgresDatabaseManager
+from backend.database.database import PostgresDatabaseManager
 from backend.core.auth import AuthManager, ROLE_ADMIN, ROLE_OPERATOR, ROLE_VIEWER, ROLE_PERMISSIONS
 from backend.core.validation import (
     LoginRequestSchema, UserCreateSchema, BetInsertSchema, SearchParamsSchema,
     validate_json_schema, validate_args_schema, security_headers,
-    sanitize_text, detect_sql_injection, detect_xss, log_security_event,
-    SecurityError, ValidationError as CustomValidationError
+    sanitize_text, log_security_event, ValidationError as CustomValidationError
 )
 from flask_jwt_extended import (
     jwt_required, get_jwt_identity, get_jwt,
-    verify_jwt_in_request, set_access_cookies, set_refresh_cookies,
-    unset_jwt_cookies
+    set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 )
 
 # Configurar logging

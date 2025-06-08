@@ -15,8 +15,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from backend.core.validation import (
     LoginRequestSchema, UserCreateSchema, BetInsertSchema,
     sanitize_text, detect_sql_injection, detect_xss,
-    SecurityError, ValidationError as CustomValidationError,
-    log_security_event, sanitize_filename, validate_and_sanitize_dict
+    SecurityError, log_security_event,
+    sanitize_filename, validate_and_sanitize_dict
 )
 from backend.apps import admin_api
 from pydantic import ValidationError
@@ -433,7 +433,7 @@ class TestAdvancedSecurity:
         import time
         
         start_time = time.time()
-        result1 = detect_sql_injection("normal_input")
+        detect_sql_injection("normal_input")
         normal_time = time.time() - start_time
         
         start_time = time.time()

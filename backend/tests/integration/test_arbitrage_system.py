@@ -8,13 +8,7 @@ Corrigido para alinhar com schema SQLite real.
 import pytest
 import json
 import sqlite3
-import os
-import tempfile
-import shutil
-from datetime import datetime, timedelta
-from unittest.mock import patch, Mock
 
-from database.database import get_db, DATABASE_PATH
 
 
 class TestArbitrageDetection:
@@ -50,7 +44,7 @@ class TestArbitrageDetection:
         assert opportunity is not None
         
         # Verificar cálculos
-        stakes = json.loads(opportunity['stakes_json'])
+        json.loads(opportunity['stakes_json'])
         selections = json.loads(opportunity['selections_json'])
         
         # Calcular probabilidade total implícita
@@ -358,7 +352,6 @@ class TestPerformanceMetrics:
     
     def test_concurrent_access(self, populated_database):
         """Testa que múltiplas consultas podem ser executadas sem erro."""
-        import threading
         import time
         
         db = populated_database

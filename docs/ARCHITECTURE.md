@@ -264,7 +264,7 @@ ADMIN_PASSWORD_HASH=your-hashed-password
 
 ```python
 # Development
-- SQLite em memória para testes
+- PostgreSQL para testes e desenvolvimento
 - Logs detalhados
 - CORS permissivo
 - Blacklist em memória

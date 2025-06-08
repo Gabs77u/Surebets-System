@@ -3,7 +3,6 @@ import os
 import subprocess
 from pathlib import Path
 import logging
-from config.config_loader import CONFIG
 
 # Caminhos relativos robustos
 BASE_DIR = Path(__file__).parent.resolve()
@@ -29,8 +28,6 @@ logging.basicConfig(
 
 def init_database():
     """Inicializa o banco de dados SQLite com schema e dados"""
-    import sqlite3
-    import time
     logging.info("Inicializando banco de dados SQLite...")
     try:
         backend_path = str(BACKEND_DIR)

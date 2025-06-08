@@ -8,21 +8,20 @@ import os
 import logging
 from datetime import datetime, timedelta
 import random
-from backend.apps.radar_api import SportRadarAPI
+from config.config_loader import CONFIG
 
 logger = logging.getLogger(__name__)
 
 class UnifiedBookmakerAdapter:
     def __init__(self, bookmaker_name: str):
         self.bookmaker_name = bookmaker_name
-        self.is_mock_mode = os.getenv('MOCK_BOOKMAKER_DATA', 'true').lower() == 'true'
-        self.sportradar = SportRadarAPI(bookmaker_name)
+        self.is_mock_mode = os.getenv('MOCK_BOOKMAKER_DATA', str(CONFIG.get('mock_bookmaker_data', 'true'))).lower() == 'true'
         self.base_settings = {
-            'timeout': int(os.getenv('BOOKMAKER_TIMEOUT', '30')),
-            'max_retries': int(os.getenv('BOOKMAKER_MAX_RETRIES', '3')),
-            'rate_limit': float(os.getenv('BOOKMAKER_RATE_LIMIT', '1.0')),
-            'min_odds': float(os.getenv('GLOBAL_MIN_ODDS', '1.01')),
-            'max_odds': float(os.getenv('GLOBAL_MAX_ODDS', '1000')),
+            'timeout': int(os.getenv('BOOKMAKER_TIMEOUT', str(CONFIG.get('bookmaker_timeout', 30)))),
+            'max_retries': int(os.getenv('BOOKMAKER_MAX_RETRIES', str(CONFIG.get('bookmaker_max_retries', 3)))),
+            'rate_limit': float(os.getenv('BOOKMAKER_RATE_LIMIT', str(CONFIG.get('bookmaker_rate_limit', 1.0)))),
+            'min_odds': float(os.getenv('GLOBAL_MIN_ODDS', str(CONFIG.get('global_min_odds', 1.01)))),
+            'max_odds': float(os.getenv('GLOBAL_MAX_ODDS', str(CONFIG.get('global_max_odds', 1000)))),
         }
         logger.info(f"Inicializando adaptador unificado para {bookmaker_name}")
         if self.is_mock_mode:

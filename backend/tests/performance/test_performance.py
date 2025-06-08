@@ -6,13 +6,10 @@ Testes para medir e validar performance do sistema.
 
 import pytest
 import time
-import threading
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from unittest.mock import patch
 import logging
 
-from database.database import get_db
 
 
 class TestDatabasePerformance:
@@ -263,7 +260,7 @@ class TestArbitragePerformance:
         
         for _ in range(20):
             benchmark_timer.start()
-            opportunities = db.fetch(detection_query)
+            db.fetch(detection_query)
             benchmark_timer.stop()
             
             detection_times.append(benchmark_timer.elapsed_ms())

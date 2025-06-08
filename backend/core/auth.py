@@ -1,10 +1,9 @@
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, get_jwt
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import timedelta, datetime
 import redis
 import os
 import logging
-from typing import Dict, List, Any, Optional, Union
 from config.config_loader import CONFIG
 
 # Configuração de logging

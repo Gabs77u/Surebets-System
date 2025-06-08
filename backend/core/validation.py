@@ -3,14 +3,13 @@ Módulo de validação e sanitização rigorosa para o sistema Surebets.
 Implementa validação de entrada usando Pydantic e sanitização contra XSS/SQL Injection.
 """
 
-from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
+from typing import Dict, Any, Optional, List
 import re
 import html
 import bleach
 import logging
 from pydantic import BaseModel, validator, EmailStr, Field, ValidationError
-from marshmallow import Schema, fields, validate, ValidationError as MarshmallowValidationError
+from marshmallow import Schema, fields, validate
 from functools import wraps
 from flask import request, jsonify
 
@@ -22,11 +21,9 @@ ALLOWED_ATTRIBUTES = {}
 
 class SecurityError(Exception):
     """Exceção para violações de segurança."""
-    pass
 
 class ValidationError(Exception):
     """Exceção para erros de validação."""
-    pass
 
 # ============= SCHEMAS PYDANTIC =============
 

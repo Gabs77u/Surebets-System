@@ -229,7 +229,6 @@ class TestAuthFlow:
     
     def test_token_expiration(self, client):
         """Testa expiração de token"""
-        import importlib
         from backend.apps.admin_api import app as admin_api
         admin_api.config['JWT_ACCESS_TOKEN_EXPIRES'] = 1  # 1 segundo
         
@@ -296,7 +295,6 @@ class TestAuthFlow:
             assert operator_response.status_code == 403
 
     def test_roles_endpoint(self, client):
-        from backend.core.auth import ROLE_ADMIN, ROLE_OPERATOR, ROLE_VIEWER
         login_response = client.post('/api/auth/login', json={'username': 'admin', 'password': 'admin123'})
         admin_token = json.loads(login_response.data)['access_token']
         roles_response = client.get('/api/auth/roles', headers={'Authorization': f'Bearer {admin_token}'})

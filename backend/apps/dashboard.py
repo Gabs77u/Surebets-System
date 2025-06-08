@@ -5,33 +5,28 @@ Este arquivo unifica as implementações de app.py e app_refactored.py,
 mantendo as melhores funcionalidades de ambos e removendo redundâncias.
 """
 
-from dash import dcc, html, dash_table, callback_context
+from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
-import requests
 import sys
 import os
 import logging
-import json
 import dash
-from dash.exceptions import PreventUpdate
 import plotly.graph_objs as go
-from functools import wraps
-import pandas as pd
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 # Adicionar o diretório raiz ao sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 # Importar módulos unificados
-from backend.core.i18n import get_text, get_language_dict, I18n, DEFAULT_LANGUAGE
+from backend.core.i18n import I18n
 from backend.apps.adapters import get_all_adapters, get_bookmaker_names
 from config import settings
 
 # Configuração de logging
 logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
+    level=logging.INFO if not os.getenv('DEBUG', str(settings.DEBUG)).lower() in ['1', 'true', 'yes'] else logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)

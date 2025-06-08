@@ -30,8 +30,9 @@ WHATSAPP_PHONE = os.getenv("WHATSAPP_PHONE", "")
 CACHE_TIMEOUT = 60  # Não presente no YAML, manter padrão
 
 # Configuração de banco de dados PostgreSQL
-DATABASE_PATH = None  # Não usado, pois agora é Postgres
-DATABASE_URL = f"postgresql://{CONFIG['postgres']['user']}:{CONFIG['postgres']['password']}@{CONFIG['postgres']['host']}:{CONFIG['postgres']['port']}/{CONFIG['postgres']['dbname']}"
+DATABASE_URL = os.getenv("POSTGRES_DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = f"postgresql://{CONFIG['postgres']['user']}:{CONFIG['postgres']['password']}@{CONFIG['postgres']['host']}:{CONFIG['postgres']['port']}/{CONFIG['postgres']['dbname']}"
 DATABASE_BACKUP_DIR = None  # Não presente no YAML
 
 # Configurações de pool de conexões

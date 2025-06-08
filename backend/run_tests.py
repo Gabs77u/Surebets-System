@@ -4,7 +4,6 @@ Script para executar todos os testes do sistema Surebets.
 Inclui testes unitários, de integração e de performance.
 """
 
-import os
 import sys
 import subprocess
 import argparse

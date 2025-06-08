@@ -47,26 +47,26 @@ jobs:
     - name: 📋 Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r src/requirements.txt
+        pip install -r backend/requirements.txt
         pip install black flake8 mypy pytest pytest-cov safety bandit
         
     - name: 🎨 Code Formatting (Black)
-      run: black --check backend/ frontend/ src/
+      run: black --check backend/ src/
       
     - name: 🔍 Linting (Flake8)
-      run: flake8 backend/ frontend/ src/ --max-line-length=88 --extend-ignore=E203,W503
+      run: flake8 backend/ src/ --max-line-length=88 --extend-ignore=E203,W503
       
     - name: 🔬 Type Checking (MyPy)
-      run: mypy backend/ frontend/ src/ --ignore-missing-imports
+      run: mypy backend/ src/ --ignore-missing-imports
       
     - name: 🛡️ Security Check (Bandit)
-      run: bandit -r backend/ frontend/ src/ -f json -o bandit-report.json
+      run: bandit -r backend/ src/ -f json -o bandit-report.json
       
     - name: 🔒 Dependency Security (Safety)
       run: safety check --json
       
     - name: 📊 Upload Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: code-quality-reports
@@ -126,7 +126,7 @@ jobs:
     - name: 📋 Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r src/requirements.txt
+        pip install -r backend/requirements.txt
         pip install pytest pytest-cov pytest-xdist pytest-mock
         
     - name: 🧪 Run Unit Tests
@@ -135,7 +135,7 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
         FLASK_ENV: testing
       run: |
-        python -m pytest tests/unit/ -v --cov=backend --cov=frontend --cov-report=xml --cov-report=html
+        python -m pytest tests/unit/ -v --cov=backend --cov-report=xml --cov-report=html
         
     - name: 🔗 Run Integration Tests
       env:
@@ -153,7 +153,7 @@ jobs:
         name: codecov-umbrella
         
     - name: 📈 Upload Coverage Reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-reports-${{ matrix.python-version }}
         path: |
@@ -196,7 +196,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
+        file: docker/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -312,7 +312,7 @@ jobs:
         locust -f tests/performance/locustfile.py --host=https://staging.surebets.com --users=100 --spawn-rate=10 --run-time=5m --headless --csv=performance-results
         
     - name: 📊 Upload Performance Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-results
         path: performance-results*

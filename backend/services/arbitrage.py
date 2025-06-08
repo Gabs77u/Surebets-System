@@ -2,6 +2,7 @@ from typing import List, Dict, Any
 import itertools
 from config.config_loader import CONFIG
 
+
 class SurebetDetector:
     """
     Algoritmo para detecção de arbitragem (surebets).
@@ -14,7 +15,7 @@ class SurebetDetector:
         odds = [o for o in odds if o and o > 0]
         if not odds or any(o <= 1 for o in odds):
             return 1.0  # Não há arbitragem válida
-        return sum(1/o for o in odds)
+        return sum(1 / o for o in odds)
 
     @staticmethod
     def find_surebets(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -33,31 +34,38 @@ class SurebetDetector:
             ...
         ]
         """
-        MIN_PROFIT_PERCENT = CONFIG['services']['arbitrage']['min_profit_percent']
+        MIN_PROFIT_PERCENT = CONFIG["services"]["arbitrage"]["min_profit_percent"]
         surebets = []
         for event in events:
-            selections = event['selections']
+            selections = event["selections"]
             # Agrupa seleções por nome (ex: Home, Draw, Away)
-            selection_names = list({s['name'] for s in selections})
+            selection_names = list({s["name"] for s in selections})
             # Gera todas as combinações possíveis, uma odd por seleção, de casas diferentes
-            combos = list(itertools.product(*[
-                [s for s in selections if s['name'] == sel] for sel in selection_names
-            ]))
+            combos = list(
+                itertools.product(
+                    *[
+                        [s for s in selections if s["name"] == sel]
+                        for sel in selection_names
+                    ]
+                )
+            )
             for combo in combos:
                 # Garante que cada odd vem de uma casa diferente
-                bookmakers = [s['bookmaker'] for s in combo]
+                bookmakers = [s["bookmaker"] for s in combo]
                 if len(set(bookmakers)) != len(bookmakers):
                     continue
-                odds = [s['odds'] for s in combo]
+                odds = [s["odds"] for s in combo]
                 arb_index = SurebetDetector.calculate_arbitrage(odds)
                 if arb_index < 1:
-                    profit_percent = (1-arb_index)*100
+                    profit_percent = (1 - arb_index) * 100
                     if profit_percent >= MIN_PROFIT_PERCENT:
-                        surebets.append({
-                            'event_id': event['event_id'],
-                            'market': event['market'],
-                            'selections': combo,
-                            'arbitrage_index': arb_index,
-                            'profit_percent': profit_percent
-                        })
+                        surebets.append(
+                            {
+                                "event_id": event["event_id"],
+                                "market": event["market"],
+                                "selections": combo,
+                                "arbitrage_index": arb_index,
+                                "profit_percent": profit_percent,
+                            }
+                        )
         return surebets

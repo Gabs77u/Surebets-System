@@ -21,8 +21,8 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("surebets_system.log", encoding="utf-8"),
-        logging.StreamHandler()
-    ]
+        logging.StreamHandler(),
+    ],
 )
 
 
@@ -37,15 +37,18 @@ def init_database():
         if project_root not in sys.path:
             sys.path.insert(0, project_root)
         from backend.database.database import DatabaseManager
+
         db = DatabaseManager()
-        result = db.fetch_one("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'")
-        if result and result['count'] > 0:
+        result = db.fetch_one(
+            "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'"
+        )
+        if result and result["count"] > 0:
             logging.info("Banco de dados já existe e está configurado.")
             return
         logging.info("Criando estrutura do banco...")
         with open(DB_SCHEMA, "r", encoding="utf-8") as f:
             schema_sql = f.read()
-            for statement in schema_sql.split(';'):
+            for statement in schema_sql.split(";"):
                 statement = statement.strip()
                 if statement:
                     db.execute(statement)
@@ -53,7 +56,7 @@ def init_database():
             logging.info("Populando banco com dados iniciais...")
             with open(DB_POPULATE, "r", encoding="utf-8") as f:
                 populate_sql = f.read()
-                for statement in populate_sql.split(';'):
+                for statement in populate_sql.split(";"):
                     statement = statement.strip()
                     if statement:
                         db.execute(statement)
@@ -61,6 +64,7 @@ def init_database():
     except Exception as e:
         logging.error(f"Erro ao inicializar banco de dados: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -78,6 +82,7 @@ def run_admin_api():
 def wait_service_ready(url, timeout=30):
     import requests
     import time
+
     start = time.time()
     while time.time() - start < timeout:
         try:
@@ -91,7 +96,9 @@ def wait_service_ready(url, timeout=30):
 
 if __name__ == "__main__":
     logging.info("Iniciando Surebets System (Versão Unificada)...")
-    logging.info("Se o antivírus acusar falso positivo, adicione uma exceção para este executável.")
+    logging.info(
+        "Se o antivírus acusar falso positivo, adicione uma exceção para este executável."
+    )
     init_database()
     processes.append(run_dash())
     processes.append(run_admin_api())

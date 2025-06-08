@@ -1,10 +1,12 @@
 import pytest
 from backend.apps.admin_api import app
 
+
 @pytest.fixture
 def client():
     with app.test_client() as client:
         yield client
+
 
 def test_fluxo_e2e_basico(client):
     # Exemplo: login, operação, logout

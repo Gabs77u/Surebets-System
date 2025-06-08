@@ -16,4 +16,4 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Configurar ambiente de teste
-os.environ['TESTING'] = 'True'
+os.environ["TESTING"] = "True"

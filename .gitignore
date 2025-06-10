@@ -11,6 +11,7 @@ __pycache__/
 
 # VSCode
 .vscode/
+.idea/
 
 # PyInstaller
 build/
@@ -29,6 +30,8 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
+pytest_output*.log
 
 # Backup/temp
 *.bak
@@ -41,6 +44,9 @@ Thumbs.db
 
 # Docker
 **/docker-compose.override.yml
+
+# Arquivos de configuração sensíveis
+config/settings.py
 
 # Outros
 *.orig

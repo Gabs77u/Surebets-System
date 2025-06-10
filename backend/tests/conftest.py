@@ -4,6 +4,10 @@
 Fixtures e configurações globais para todos os testes.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 import pytest
 import os
 from backend.database.database import get_db
@@ -13,17 +17,27 @@ from pathlib import Path
 @pytest.fixture(scope="session")
 def test_database_url():
     """Retorna a URL do banco PostgreSQL de teste."""
-    return os.getenv("POSTGRES_DATABASE_URL") or os.getenv("DATABASE_URL")
+    url = os.getenv("POSTGRES_DATABASE_URL") or os.getenv("DATABASE_URL")
+    if not url:
+        # Tenta usar variáveis de teste se rodando pytest
+        url = os.getenv("POSTGRES_DATABASE_URL_TEST") or os.getenv("DATABASE_URL_TEST")
+    if not url:
+        raise RuntimeError(
+            "POSTGRES_DATABASE_URL, DATABASE_URL ou variáveis de teste não definidas. Defina a variável de ambiente para rodar os testes de integração."
+        )
+    return url
 
 
 @pytest.fixture(scope="function")
 def clean_database(test_database_url):
     """Fixture que fornece um banco limpo para cada teste usando PostgreSQL."""
     db = get_db()
+    if db is None:
+        pytest.skip("Banco de dados não disponível para testes.")
     conn = db._get_connection()
     with conn.cursor() as cursor:
-        cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-        tables = [row["tablename"] for row in cursor.fetchall()]
+        # Corrige acesso ao resultado do fetchall para tupla
+        tables = [row[0] for row in cursor.fetchall()]
         for table in tables:
             cursor.execute(f'TRUNCATE TABLE "{table}" RESTART IDENTITY CASCADE')
     conn.commit()
@@ -37,17 +51,17 @@ def clean_database(test_database_url):
         conn.commit()
     # Popular banco com dados fictícios
     populate_file = Path(__file__).parent.parent / "database" / "populate.sql"
-    if populate_file.exists():
+    if populate_file.exists() and os.path.getsize(populate_file) > 0:
         with open(populate_file, "r", encoding="utf-8") as f:
             populate_sql = f.read()
-        # Executa cada comando separadamente, ignorando linhas em branco
         statements = [stmt.strip() for stmt in populate_sql.split(";") if stmt.strip()]
         with conn.cursor() as cursor:
             for stmt in statements:
                 cursor.execute(stmt)
         conn.commit()
     yield db
-    db.close()
+    if db is not None and hasattr(db, "close"):
+        db.close()
 
 
 @pytest.fixture(scope="function")

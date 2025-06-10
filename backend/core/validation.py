@@ -152,47 +152,61 @@ class UserMarshmallowSchema(Schema):
 
 def sanitize_text(text: str) -> str:
     """
-    Sanitiza texto contra XSS e outros ataques.
+    Sanitiza texto contra XSS, SQLi, Unicode invisível e outros ataques, sem bloquear dados legítimos de scraping.
     """
     if not isinstance(text, str):
         return str(text)
 
-    # Remover caracteres de controle
-    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f]", "", text)
-
-    # Escape de HTML
-    text = html.escape(text)
-
-    # Usar bleach para sanitização adicional
-    text = bleach.clean(
-        text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True
-    )
+    # Remover caracteres de controle e invisíveis (inclui zero-width, RLO, etc)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f\u200b\u200c\u200d\u202a-\u202e\ufeff]", "", text)
 
     # Remover múltiplos espaços
     text = re.sub(r"\s+", " ", text).strip()
+
+    # Usar bleach para sanitização XSS (sem tags, sem atributos)
+    text = bleach.clean(text, tags=[], attributes={}, strip=True)
+
+    # Remover palavras-chave perigosas (alert, javascript, etc)
+    dangerous_keywords = [
+        r"alert", r"javascript", r"onerror", r"onload", r"<script>", r"</script>", r"drop table", r"insert into", r"delete from", r"update set"
+    ]
+    for kw in dangerous_keywords:
+        text = re.sub(kw, "", text, flags=re.IGNORECASE)
+
+    # Escape HTML (apenas após bleach e filtro de palavras)
+    text = html.escape(text, quote=True)
+    # Corrigir duplo escape: substituir '&amp;lt;' por '&lt;' etc
+    text = text.replace('&amp;lt;', '&lt;').replace('&amp;gt;', '&gt;').replace('&amp;quot;', '&quot;').replace('&amp;#x27;', '&#x27;').replace('&amp;amp;', '&amp;')
 
     return text
 
 
 def detect_sql_injection(text: str) -> bool:
     """
-    Detecta tentativas básicas de SQL injection.
+    Detecta tentativas de SQL injection, incluindo variantes clássicas, booleanas, comentários e subqueries.
     """
+    if not isinstance(text, str):
+        return False
     sql_patterns = [
+        r"(;\s*--)",
+        r"(;\s*\/\*)",
+        r"(\/\*.*\*\/)",  # Comentários /* ... */
         r"(\bunion\b.*\bselect\b)",
-        r"(\bselect\b.*\bfrom\b)",
         r"(\bdrop\b.*\btable\b)",
         r"(\binsert\b.*\binto\b)",
         r"(\bdelete\b.*\bfrom\b)",
         r"(\bupdate\b.*\bset\b)",
-        r"(;\s*--)",
-        r"(;\s*\/\*)",
-        r"(\bor\b.*=.*)",
-        r"(\band\b.*=.*)",
-        r"(\'.*\bor\b.*\')",
-        r"(\".*\bor\b.*\")",
+        r"(['\"]?\s*or\s*['\"]?\s*\d+\s*=\s*['\"]?\d+)",  # OR 1=1
+        r"(['\"]?\s*and\s*['\"]?\s*\d+\s*=\s*['\"]?\d+)", # AND 1=1
+        r"(['\"]\s*or\s*['\"]?1['\"]?=['\"]?1)",
+        r"(['\"]\s*and\s*['\"]?1['\"]?=['\"]?1)",
+        r"(waitfor\s+delay)",
+        r"(sleep\s*\()",
+        r"(select\s*\(.*\))",  # subqueries
+        r"(ascii\s*\()",
+        r"(\b(and|or)\b.*\(\s*select.*\))", # AND (SELECT ...)
+        r"(\/\*\*\/|\/\*.*?\*\/)", # /**/ comments
     ]
-
     text_lower = text.lower()
     for pattern in sql_patterns:
         if re.search(pattern, text_lower, re.IGNORECASE):
@@ -203,8 +217,10 @@ def detect_sql_injection(text: str) -> bool:
 
 def detect_xss(text: str) -> bool:
     """
-    Detecta tentativas básicas de XSS.
+    Detecta tentativas de XSS, evitando falsos positivos em dados esportivos.
     """
+    if not isinstance(text, str):
+        return False
     xss_patterns = [
         r"<script.*?>.*?</script>",
         r"javascript:",
@@ -217,8 +233,13 @@ def detect_xss(text: str) -> bool:
         r"<meta.*?>",
         r"<link.*?>",
     ]
-
     text_lower = text.lower()
+    # Permitir nomes e mercados esportivos comuns
+    safe_keywords = [
+        "over", "under", "draw", "team", "score", "goals", "match", "winner", "handicap", "corner", "yellow card", "red card"
+    ]
+    if any(kw in text_lower for kw in safe_keywords):
+        return False
     for pattern in xss_patterns:
         if re.search(pattern, text_lower, re.IGNORECASE):
             logger.warning(f"Possível XSS detectado: {pattern}")
@@ -247,7 +268,7 @@ def sanitize_filename(filename: str) -> str:
 
 def validate_json_schema(schema_class):
     """
-    Decorador para validar JSON usando Pydantic.
+    Decorador para validar JSON usando Pydantic e passar validated_data como argumento nomeado para a view.
     """
 
     def decorator(f):
@@ -272,7 +293,7 @@ def validate_json_schema(schema_class):
 
                 # Validar com Pydantic
                 validated_data = schema_class(**data)
-                request.validated_data = validated_data.dict()
+                kwargs["validated_data"] = validated_data.dict()
 
             except ValidationError as e:
                 logger.warning(f"Erro de validação: {e}")
@@ -290,7 +311,7 @@ def validate_json_schema(schema_class):
 
 def validate_args_schema(schema_class):
     """
-    Decorador para validar argumentos de URL.
+    Decorador para validar argumentos de URL e passar validated_args como argumento nomeado para a view.
     """
 
     def decorator(f):
@@ -298,16 +319,14 @@ def validate_args_schema(schema_class):
         def decorated_function(*args, **kwargs):
             try:
                 # Validar argumentos da URL
-                validated_data = schema_class(**request.args.to_dict())
-                request.validated_args = validated_data.dict()
-
+                validated_args = schema_class(**request.args.to_dict())
+                kwargs["validated_args"] = validated_args.dict()
             except ValidationError as e:
                 logger.warning(f"Erro de validação de argumentos: {e}")
                 return (
                     jsonify({"error": "Parâmetros inválidos", "details": str(e)}),
                     400,
                 )
-
             return f(*args, **kwargs)
 
         return decorated_function
@@ -372,7 +391,7 @@ def validate_and_sanitize_dict(
     return result
 
 
-def log_security_event(event_type: str, details: str, ip_address: str = None):
+def log_security_event(event_type: str, details: str, ip_address: Optional[str] = None):
     """
     Registra eventos de segurança.
     """

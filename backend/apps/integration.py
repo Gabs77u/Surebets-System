@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timedelta
 import random
 from config.config_loader import CONFIG
+from backend.services.scraper import BettingScraper
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +17,8 @@ logger = logging.getLogger(__name__)
 class UnifiedBookmakerAdapter:
     def __init__(self, bookmaker_name: str):
         self.bookmaker_name = bookmaker_name
-        self.is_mock_mode = (
-            os.getenv(
-                "MOCK_BOOKMAKER_DATA", str(CONFIG.get("mock_bookmaker_data", "true"))
-            ).lower()
-            == "true"
-        )
+        # Força scraping real SEMPRE (ignora variável de ambiente)
+        self.is_mock_mode = False
         self.base_settings = {
             "timeout": int(
                 os.getenv("BOOKMAKER_TIMEOUT", str(CONFIG.get("bookmaker_timeout", 30)))
@@ -55,26 +52,68 @@ class UnifiedBookmakerAdapter:
     ) -> List[Dict[str, Any]]:
         if self.is_mock_mode:
             return self._generate_mock_live_odds(sport, limit)
-        # Exemplo: usar self.sportradar.modal_data(sport_id, ...)
-        return self.sportradar.modal_data(sport, method="all")
+        # Scraping real por casa de aposta
+        scraper = BettingScraper()
+        odds = []
+        if self.bookmaker_name == "bet365":
+            odds = scraper.get_odds_bet365("https://www.bet365.com/#/IP/EV1")
+        elif self.bookmaker_name == "pinnacle":
+            odds = scraper.get_odds_pinnacle("https://www.pinnacle.com/pt/live")
+        elif self.bookmaker_name == "betfair":
+            odds = scraper.get_odds_betfair("https://www.betfair.com/sport/inplay")
+        elif self.bookmaker_name == "superodds":
+            odds = scraper.get_odds_superodds("https://www.superodds.com/live")
+        scraper.close()
+        # Exemplo de estrutura de retorno
+        return [
+            {
+                "id": f"{self.bookmaker_name}_live_{i}",
+                "name": f"Evento {i}",
+                "sport": sport,
+                "status": "live",
+                "start_time": datetime.now().isoformat(),
+                "odds": odd,
+            }
+            for i, odd in enumerate(odds[:limit])
+        ]
 
     def get_upcoming_odds(
         self, sport: str = "soccer", limit: int = 50
     ) -> List[Dict[str, Any]]:
         if self.is_mock_mode:
             return self._generate_mock_upcoming_odds(sport, limit)
-        return self.sportradar.modal_data(sport, method="all")
+        scraper = BettingScraper()
+        odds = []
+        if self.bookmaker_name == "bet365":
+            odds = scraper.get_odds_bet365("https://www.bet365.com/#/AC/B1/C1/D8/E765_F196/G40/")
+        elif self.bookmaker_name == "pinnacle":
+            odds = scraper.get_odds_pinnacle("https://www.pinnacle.com/pt/soccer/matchups")
+        elif self.bookmaker_name == "betfair":
+            odds = scraper.get_odds_betfair("https://www.betfair.com/sport/football")
+        elif self.bookmaker_name == "superodds":
+            odds = scraper.get_odds_superodds("https://www.superodds.com/upcoming")
+        scraper.close()
+        return [
+            {
+                "id": f"{self.bookmaker_name}_upcoming_{i}",
+                "name": f"Evento Futuro {i}",
+                "sport": sport,
+                "status": "upcoming",
+                "start_time": (datetime.now() + timedelta(minutes=10 * (i + 1))).isoformat(),
+                "odds": odd,
+            }
+            for i, odd in enumerate(odds[:limit])
+        ]
 
     def get_markets(self, event_id: str) -> List[Dict[str, Any]]:
-        if self.is_mock_mode:
-            return self._generate_mock_markets(event_id)
-        return self.sportradar.league(event_id)
+        # Retorno vazio para scraping real (ajuste conforme integração futura)
+        return []
 
     def get_league(self, league_id: str) -> Optional[Dict[str, Any]]:
-        return self.sportradar.league(league_id)
+        return None
 
     def get_fixtures(self, league_id: str) -> Optional[Dict[str, Any]]:
-        return self.sportradar.league_fixtures(league_id)
+        return None
 
     # Métodos mock simplificados
     def _generate_mock_live_odds(self, sport: str, limit: int) -> List[Dict[str, Any]]:
@@ -133,5 +172,5 @@ class BookmakerIntegration:
     def get_adapter(self, name: str) -> UnifiedBookmakerAdapter:
         return self.adapters[name]
 
-    def list_bookmakers(self) -> List[str]:
-        return list(self.adapters.keys())
+    def list_bookmakers(self) -> Dict[str, UnifiedBookmakerAdapter]:
+        return self.adapters

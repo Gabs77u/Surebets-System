@@ -13,8 +13,11 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 
 # Importar módulos unificados
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from config.config_loader import CONFIG
-import config.settings as settings
+from config import settings
 from backend.services.notification import notify_all
 from backend.apps.integration import BookmakerIntegration
 from backend.core.i18n import get_text
@@ -165,9 +168,9 @@ def create_app(config_overrides=None):
     @app.route("/api/auth/login", methods=["POST"])
     @validate_json_schema(LoginRequestSchema)
     @security_headers()
-    def jwt_login():
+    def jwt_login(validated_data):
         """Login para todos os usuários (JWT) com validação Pydantic."""
-        data = request.validated_data  # Dados já validados pelo decorador
+        data = validated_data  # Dados já validados pelo decorador
         username = data["username"]
         password = data["password"]
         use_cookie = data.get("use_cookie", False)
@@ -836,10 +839,10 @@ def create_app(config_overrides=None):
     @app.route("/api/admin/insert-bet", methods=["POST"])
     @validate_json_schema(BetInsertSchema)
     @security_headers()
-    def admin_insert_bet():
+    def admin_insert_bet(validated_data):
         """Insere nova aposta no sistema com validação Pydantic."""
         try:
-            bet_data = request.validated_data  # Dados já validados pelo decorador
+            bet_data = validated_data  # Dados já validados pelo decorador
             lang = "pt"  # Substituir get_request_language() por 'pt' (ou idioma padrão)
 
             db = PostgresDatabaseManager()
@@ -1143,3 +1146,6 @@ if __name__ == "__main__":
         port=int(os.getenv("ADMIN_API_PORT", 5000)),
         debug=settings.DEBUG,
     )
+
+# Alias para compatibilidade com testes e mocks
+DatabaseManager = PostgresDatabaseManager

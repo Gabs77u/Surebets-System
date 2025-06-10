@@ -54,7 +54,7 @@ RUN mkdir -p /app /app/logs /app/data /app/static && \
 WORKDIR /app
 
 # Copiar arquivo de requisitos
-COPY src/requirements.txt .
+COPY backend/requirements.txt .
 
 # Instalar dependências Python
 RUN pip install --upgrade pip && \

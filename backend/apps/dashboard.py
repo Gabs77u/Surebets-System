@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 # Importar módulos unificados
 from backend.core.i18n import I18n
-from backend.apps.adapters import get_all_adapters, get_bookmaker_names
+from adapters import get_all_adapters, get_bookmaker_names
 from config import settings
 
 # Configuração de logging

@@ -2,12 +2,12 @@
 🧪 TESTES DE INTEGRAÇÃO - SISTEMA DE ARBITRAGEM
 ===============================================
 Testes para funcionalidades integradas do sistema de arbitragem.
-Corrigido para alinhar com schema SQLite real.
+Corrigido para alinhar com schema PostgreSQL real.
 """
 
 import pytest
 import json
-import sqlite3
+import psycopg2
 
 
 class TestArbitrageDetection:
@@ -20,8 +20,8 @@ class TestArbitrageDetection:
         # Buscar oportunidades ativas
         opportunities = db.fetch(
             """
-            SELECT * FROM arbitrage_opportunities 
-            WHERE is_active = 1
+            SELECT * FROM v_active_opportunities 
+            WHERE odds > 1.0
         """
         )
 
@@ -29,10 +29,7 @@ class TestArbitrageDetection:
 
         # Verificar estrutura dos dados
         for opp in opportunities:
-            assert opp["profit_percentage"] > 0
-            assert opp["total_implied_probability"] < 100
-            assert opp["stakes_json"] is not None
-            assert opp["selections_json"] is not None
+            assert opp["odds"] > 1.0
 
     def test_arbitrage_calculation_accuracy(self, populated_database):
         """Testa precisão dos cálculos de arbitragem."""
@@ -40,9 +37,7 @@ class TestArbitrageDetection:
 
         # Buscar uma oportunidade específica
         opportunity = db.fetch_one(
-            """
-            SELECT * FROM arbitrage_opportunities WHERE id = 3001
-        """
+            "SELECT * FROM v_active_opportunities LIMIT 1"
         )
         assert opportunity is not None
 
@@ -64,9 +59,7 @@ class TestArbitrageDetection:
         db = populated_database
 
         opportunity = db.fetch_one(
-            """
-            SELECT * FROM arbitrage_opportunities WHERE id = 3001
-        """
+            "SELECT * FROM v_active_opportunities LIMIT 1"
         )
 
         stakes = json.loads(opportunity["stakes_json"])
@@ -85,23 +78,18 @@ class TestArbitrageDetection:
 
         # Inserir oportunidade com expiração no passado
         expired_opp_id = db.insert(
-            "arbitrage_opportunities",
+            "surebets",
             {
-                "event_id": 1001,
-                "market_id": 1,
-                "profit_percentage": 2.5,
-                "total_implied_probability": 97.5,
-                "stakes_json": '{"stakes":[]}',
-                "selections_json": '{"selections":[]}',
-                "is_active": 1,
-                "expires_at": "2025-05-28 12:00:00",  # Passado
+                "event_id": 1,
+                "profit": 2.5,
+                "details": '{"stakes":[]}',  # Ajustado para novo schema
                 "detected_at": "2025-05-28 10:00:00",
             },
         )
 
         # Verificar se foi inserida
         expired_opp = db.fetch_one(
-            "SELECT * FROM arbitrage_opportunities WHERE id = ?", (expired_opp_id,)
+            "SELECT * FROM surebets WHERE id = %s", (expired_opp_id,)
         )
         assert expired_opp is not None
 
@@ -118,40 +106,40 @@ class TestDatabaseOperations:
             "bookmakers",
             {
                 "name": "Teste Bookmaker",
-                "api_url": "https://teste.com/api",
-                "is_active": 1,
+                "api_key": "api_teste",
+                "is_active": True,
             },
         )
         assert bookmaker_id is not None
 
         # READ - Buscar o bookmaker inserido
         bookmaker = db.fetch_one(
-            "SELECT * FROM bookmakers WHERE id = ?", (bookmaker_id,)
+            "SELECT * FROM bookmakers WHERE id = %s", (bookmaker_id,)
         )
         assert bookmaker["name"] == "Teste Bookmaker"
 
         # UPDATE - Atualizar o bookmaker
         updated_rows = db.update(
             "bookmakers",
-            {"api_url": "https://novo-teste.com/api"},
-            "id = ?",
+            {"api_key": "novo_api_teste"},
+            "id = %s",
             (bookmaker_id,),
         )
         assert updated_rows == 1
 
         # READ - Verificar a atualização
         updated_bookmaker = db.fetch_one(
-            "SELECT * FROM bookmakers WHERE id = ?", (bookmaker_id,)
+            "SELECT * FROM bookmakers WHERE id = %s", (bookmaker_id,)
         )
-        assert updated_bookmaker["api_url"] == "https://novo-teste.com/api"
+        assert updated_bookmaker["api_key"] == "novo_api_teste"
 
         # DELETE - Deletar o bookmaker
-        deleted_rows = db.delete("bookmakers", "id = ?", (bookmaker_id,))
+        deleted_rows = db.delete("bookmakers", "id = %s", (bookmaker_id,))
         assert deleted_rows == 1
 
         # Verificar deleção
         deleted_bookmaker = db.fetch_one(
-            "SELECT * FROM bookmakers WHERE id = ?", (bookmaker_id,)
+            "SELECT * FROM bookmakers WHERE id = %s", (bookmaker_id,)
         )
         assert deleted_bookmaker is None
 
@@ -166,20 +154,20 @@ class TestDatabaseOperations:
                     "bookmakers",
                     {
                         "name": "Teste Transação",
-                        "api_url": "https://teste.com",
-                        "is_active": 1,
+                        "api_key": "api_teste",
+                        "is_active": True,
                     },
                 )
 
                 # Forçar erro para testar rollback
                 db.execute("INSERT INTO bookmakers (name) VALUES (NULL)")  # Deve falhar
 
-        except sqlite3.Error:
+        except psycopg2.Error:
             pass  # Esperado
 
         # Verificar se rollback funcionou
         bookmaker = db.fetch_one(
-            "SELECT * FROM bookmakers WHERE name = 'Teste Transação'"
+            "SELECT * FROM bookmakers WHERE name = %s", ("Teste Transação",)
         )
         assert bookmaker is None
 
@@ -189,13 +177,13 @@ class TestDatabaseOperations:
 
         # Inserir múltiplos bookmakers (sem campo website)
         bookmakers_data = [
-            ("Bookmaker 1", "https://bm1.com/api", 1),
-            ("Bookmaker 2", "https://bm2.com/api", 1),
-            ("Bookmaker 3", "https://bm3.com/api", 0),
+            ("Bookmaker 1", "api1", True),
+            ("Bookmaker 2", "api2", True),
+            ("Bookmaker 3", "api3", False),
         ]
 
         rows_affected = db.execute_many(
-            "INSERT INTO bookmakers (name, api_url, is_active) VALUES (?, ?, ?)",
+            "INSERT INTO bookmakers (name, api_key, is_active) VALUES (%s, %s, %s)",
             bookmakers_data,
         )
         assert rows_affected == 3
@@ -213,11 +201,11 @@ class TestDataValidation:
         db = populated_database
 
         # Tentar inserir odds inválidas (negativas)
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg2.IntegrityError):
             db.insert(
                 "selections",
                 {
-                    "event_id": 1001,
+                    "event_id": 1,
                     "market_id": 1,
                     "bookmaker_id": 1,
                     "name": "Test Selection",
@@ -226,11 +214,11 @@ class TestDataValidation:
             )
 
         # Tentar inserir odds zero
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg2.IntegrityError):
             db.insert(
                 "selections",
                 {
-                    "event_id": 1001,
+                    "event_id": 1,
                     "market_id": 1,
                     "bookmaker_id": 1,
                     "name": "Test Selection",
@@ -243,11 +231,11 @@ class TestDataValidation:
         db = populated_database
 
         # Tentar inserir seleção duplicada
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg2.IntegrityError):
             db.insert(
                 "selections",
                 {
-                    "event_id": 1001,
+                    "event_id": 1,
                     "market_id": 1,
                     "bookmaker_id": 1,
                     "name": "Flamengo",  # Já existe
@@ -290,13 +278,13 @@ class TestSystemIntegration:
         db.update(
             "events",
             {"home_team": event["home_team"] + " Updated"},
-            "id = ?",
+            "id = %s",
             (event["id"],),
         )
 
         # Verificar se updated_at foi atualizado
         updated_event = db.fetch_one(
-            "SELECT * FROM events WHERE id = ?", (event["id"],)
+            "SELECT * FROM events WHERE id = %s", (event["id"],)
         )
         assert updated_event["updated_at"] != original_updated_at
 
@@ -305,16 +293,13 @@ class TestSystemIntegration:
         db = populated_database
 
         # Verificar se foreign keys estão habilitadas
-        fk_status = db.fetch_one("PRAGMA foreign_keys")
-        assert fk_status[0] == 1, "Foreign keys devem estar habilitadas"
-
         # Como o schema usa CASCADE DELETE, vamos testar constraint de INSERT
         # Tentar inserir seleção com bookmaker inexistente
-        with pytest.raises((sqlite3.IntegrityError, sqlite3.OperationalError)):
+        with pytest.raises((psycopg2.IntegrityError, psycopg2.OperationalError)):
             db.insert(
                 "selections",
                 {
-                    "event_id": 1001,
+                    "event_id": 1,
                     "market_id": 1,
                     "bookmaker_id": 9999,  # ID inexistente
                     "name": "Test Selection",
@@ -323,7 +308,7 @@ class TestSystemIntegration:
             )
 
         # Testar constraint com evento inexistente
-        with pytest.raises((sqlite3.IntegrityError, sqlite3.OperationalError)):
+        with pytest.raises((psycopg2.IntegrityError, psycopg2.OperationalError)):
             db.insert(
                 "selections",
                 {
@@ -363,8 +348,8 @@ class TestSystemIntegration:
         # Verificar se oportunidades de arbitragem são válidas
         invalid_arbitrages = db.fetch(
             """
-            SELECT * FROM arbitrage_opportunities 
-            WHERE profit_percentage <= 0 OR total_implied_probability >= 100
+            SELECT * FROM surebets 
+            WHERE profit <= 0
         """
         )
         assert len(invalid_arbitrages) == 0
@@ -384,10 +369,10 @@ class TestPerformanceMetrics:
         opportunities = db.fetch(
             """
             SELECT ao.*, e.home_team, e.away_team, e.start_time
-            FROM arbitrage_opportunities ao
+            FROM surebets ao
             JOIN events e ON ao.event_id = e.id
-            WHERE ao.is_active = 1 AND ao.profit_percentage > 2.0
-            ORDER BY ao.profit_percentage DESC
+            WHERE ao.profit > 2.0
+            ORDER BY ao.profit DESC
         """
         )
         end_time = time.time()

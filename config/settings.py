@@ -35,6 +35,14 @@ if not DATABASE_URL:
     DATABASE_URL = f"postgresql://{CONFIG['postgres']['user']}:{CONFIG['postgres']['password']}@{CONFIG['postgres']['host']}:{CONFIG['postgres']['port']}/{CONFIG['postgres']['dbname']}"
 DATABASE_BACKUP_DIR = None  # Não presente no YAML
 
+# Configuração de banco de dados PostgreSQL para testes
+if os.getenv("PYTEST_CURRENT_TEST"):
+    # Força uso de banco de testes se rodando pytest
+    DATABASE_URL = os.getenv("POSTGRES_DATABASE_URL_TEST") or os.getenv("DATABASE_URL_TEST")
+    if not DATABASE_URL:
+        # Banco padrão de testes
+        DATABASE_URL = "postgresql://postgres:admin@localhost:5432/surebets_test"
+
 # Configurações de pool de conexões
 MAX_CONNECTIONS = CONFIG["postgres"]["pool_size"]
 CONNECTION_TIMEOUT = 30.0  # Não presente no YAML

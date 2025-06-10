@@ -8,8 +8,9 @@ services:
   # 🚀 Aplicação Principal
   surebets-app:
     build:
-      context: .
+      context: ..  # Corrigido para apontar para a raiz do projeto
       dockerfile: docker/Dockerfile
+      target: production
     container_name: surebets-app
     restart: unless-stopped
     ports:
@@ -46,7 +47,6 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
-      - ./config:/app/config
     depends_on:
       - db
       - redis

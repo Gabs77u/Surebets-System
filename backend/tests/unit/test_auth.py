@@ -14,8 +14,8 @@ from backend.core.auth import (
     ROLE_OPERATOR,
     ROLE_VIEWER,
 )
-from flask import Flask
-from flask_jwt_extended import create_access_token, get_jwt_identity, decode_token
+from flask import Flask, request
+from flask_jwt_extended import create_access_token, get_jwt_identity, decode_token, jwt_required
 
 
 class TestTokenBlacklist:
@@ -33,7 +33,6 @@ class TestTokenBlacklist:
         self.blacklist.add_to_blacklist(jti, exp_time)
 
         # Assert
-        assert jti in self.blacklist._blacklist
         assert self.blacklist.is_blacklisted(jti) == True
 
     def test_expired_token_cleanup(self):
@@ -53,10 +52,8 @@ class TestTokenBlacklist:
         self.blacklist.add_to_blacklist("trigger_cleanup", future_time)
 
         # Assert
-        assert (
-            expired_jti not in self.blacklist._blacklist
-        )  # Token expirado deve ser removido
-        assert valid_jti in self.blacklist._blacklist  # Token válido deve permanecer
+        assert self.blacklist.is_blacklisted(expired_jti) == False  # Token expirado deve ser removido
+        assert self.blacklist.is_blacklisted(valid_jti) == True  # Token válido deve permanecer
 
 
 class TestAuthManager:
@@ -70,23 +67,21 @@ class TestAuthManager:
     def test_token_creation(self):
         """Testa criação de token de acesso."""
         # Act
-        token = self.auth_manager.create_token("test_user", ROLE_ADMIN)
-
-        # Assert
-        decoded = decode_token(token)
-        assert decoded["sub"]["user"] == "test_user"
-        assert decoded["sub"]["role"] == ROLE_ADMIN
+        with self.app.app_context():
+            token = self.auth_manager.create_token("test_user", ROLE_ADMIN)
+            decoded = decode_token(token)
+            assert decoded["sub"]["user"] == "test_user"
+            assert decoded["sub"]["role"] == ROLE_ADMIN
 
     def test_refresh_token_creation(self):
         """Testa criação de refresh token."""
         # Act
-        token = self.auth_manager.create_refresh_token("test_user", ROLE_OPERATOR)
-
-        # Assert
-        decoded = decode_token(token)
-        assert decoded["sub"]["user"] == "test_user"
-        assert decoded["sub"]["role"] == ROLE_OPERATOR
-        assert decoded["type"] == "refresh"
+        with self.app.app_context():
+            token = self.auth_manager.create_refresh_token("test_user", ROLE_OPERATOR)
+            decoded = decode_token(token)
+            assert decoded["sub"]["user"] == "test_user"
+            assert decoded["sub"]["role"] == ROLE_OPERATOR
+            assert decoded["type"] == "refresh"
 
     def test_password_hashing(self):
         """Testa hash e verificação de senha."""
@@ -151,7 +146,7 @@ class TestJWTIntegration:
 
         @app.route("/login", methods=["POST"])
         def login():
-            data = request.json
+            data = request.json or {}
             username = data.get("username")
             password = data.get("password")
 
@@ -178,39 +173,35 @@ class TestJWTIntegration:
 
     def test_jwt_protected_endpoint(self, client):
         """Testa acesso a endpoint protegido por JWT."""
-        # Arrange - Criar token para admin
         with client.application.app_context():
+            # Arrange - Criar token para admin
             token = create_access_token(
                 identity={"user": "admin_test", "role": ROLE_ADMIN}
             )
-
-        # Act - Acessar endpoint protegido com token
-        response = client.get(
-            "/protected_admin", headers={"Authorization": f"Bearer {token}"}
-        )
-
-        # Assert
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data["message"] == "Olá admin_test!"
+            # Act - Acessar endpoint protegido com token
+            response = client.get(
+                "/protected_admin", headers={"Authorization": f"Bearer {token}"}
+            )
+            # Assert
+            assert response.status_code == 200
+            data = json.loads(response.data)
+            assert data["message"] == "Olá admin_test!"
 
     def test_jwt_protected_endpoint_unauthorized_role(self, client):
         """Testa acesso negado por role inadequado."""
-        # Arrange - Criar token para viewer
         with client.application.app_context():
+            # Arrange - Criar token para viewer
             token = create_access_token(
                 identity={"user": "viewer_test", "role": ROLE_VIEWER}
             )
-
-        # Act - Tentar acessar endpoint admin com token viewer
-        response = client.get(
-            "/protected_admin", headers={"Authorization": f"Bearer {token}"}
-        )
-
-        # Assert
-        assert response.status_code == 403
-        data = json.loads(response.data)
-        assert "error" in data
+            # Act - Tentar acessar endpoint admin com token viewer
+            response = client.get(
+                "/protected_admin", headers={"Authorization": f"Bearer {token}"}
+            )
+            # Assert
+            assert response.status_code == 403
+            data = json.loads(response.data)
+            assert "error" in data
 
 
 if __name__ == "__main__":
